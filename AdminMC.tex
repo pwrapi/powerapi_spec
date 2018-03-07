@@ -1,0 +1,69 @@
+The Administrator/Monitor and Control Interface is intended to expose administrator level measurement and control capabilities to the administrator role for the HPC platform.
+This interface assumes that the administrator role has elevated privileges.
+Additionally, the administrator is assumed to have access to all user role functionality documented in sections \ref{sec:UserMC} and \ref{sec:UserRM}.
+A full complement of access to low level information is exposed through the attribute interface and other core level functions.
+
+%==============================================================
+
+\subsection{Supported Attributes}\label{sec:AdminMCAttributes}
+A significant amount of functionality for this interface is exposed through the attribute functions (section \ref{sec:Attributes}).
+The attribute functions in conjunction with the following attributes (Table \ref{table:AdminMC}) expose numerous measurement  (get) and control (set) capabilities to the administrator role.
+
+\begin{attributetable}{Monitor and Control, Hardware - Supported Attributes }{table:AdminMC}
+	\aPstateDesc
+	\aCstateDesc
+	\aCstateLimitDesc
+	\aSstateDesc
+	\aCurrentDesc
+	\aVoltageDesc
+	\aPowerDesc
+	\aMinPowerDesc
+	\aMaxPowerDesc
+	\aFreqDesc
+	\aFreqLimitMinDesc
+	\aFreqLimitMaxDesc
+	\aEnergyDesc
+	\aTempDesc
+\end{attributetable}
+
+%==============================================================
+
+\subsection{Supported Core (Common) Functions}\label{sec:AdminMCSupportedCommon}
+
+\begin{itemize}[noitemsep,nolistsep] 
+	\item{Hierarchy Navigation Functions - section \ref{sec:Navigation}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Group Functions - section \ref{sec:Group}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Attribute Functions - section \ref{sec:Attributes}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Metadata Functions - section \ref{sec:METADATA}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Statistics Functions - section \ref{sec:StatisticsFunctions}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+\end{itemize}
+
+%==============================================================================%
+
+\subsection{Supported High-Level (Common) Functions}\label{sec:AdminMCHighLevel}
+
+\begin{itemize}[noitemsep,nolistsep] 
+	\item{Report Functions - section \ref{sec:ReportFunctions}}
+	\begin{itemize}[noitemsep,nolistsep] 
+		\item{ALL}
+	\end{itemize}
+\end{itemize}
+%==============================================================================%
+
+\subsection{Interface Specific Functions}\label{sec:AdminMCFunctions}
+

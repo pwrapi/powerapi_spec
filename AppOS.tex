@@ -1,0 +1,239 @@
+The Application/Operating System Interface is intended to expose the appropriate level of information 
+(measurement) and control to the application user or application library.
+This interface may also provide functionality appropriate for other levels of system software, such as a runtime system.
+The capabilities included in this interface concentrate on providing abstractions that allow an application or library to provide information
+that can be used to make intelligent decisions regarding performance, power and energy efficiency.
+
+An important aspect of this interface is accommodating portable application (or library) code.
+Generalized concepts such as performance and sleep states that hardware can operate in are used rather than architecture specific concepts such as hardware P-States. 
+The operating system, or privileged layer, is responsible for appropriately translating the abstracted information provided by the application layer into the hardware specific details necessary for accomplishing the desired functionality (or not).
+In essence the operating system, or privileged layer, acts as the hardware translator for the application.
+
+\subsection{Supported Attributes}\label{sec:AppOSAttributes}
+A significant amount of functionality for this interface is exposed through the attribute functions (section \ref{sec:Attributes}).
+The attributes functions in conjunction with the following attributes (Table \ref{table:AppOS}) expose numerous measurement and control capabilities to the application, application libraries or possibly portions of runtime systems.
+
+\begin{attributetable}{Application, Operating System - Supported Attributes}{table:AppOS}
+\aPowerDesc
+\aMinPowerDesc
+\aMaxPowerDesc
+\aFreqDesc
+\aFreqLimitMinDesc
+\aFreqLimitMaxDesc
+\aEnergyDesc
+\aTempDesc
+\aOSIdDesc
+\aGovDesc
+\end{attributetable}
+
+\subsection{Supported Core (Common) Functions}\label{sec:AppOSSupportedCommon}
+
+\begin{itemize}[noitemsep,nolistsep] 
+	\item{Hierarchy Navigation Functions - section \ref{sec:Navigation}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Group Functions - section \ref{sec:Group}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Attribute Functions - section \ref{sec:Attributes}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Metadata Functions - section \ref{sec:METADATA}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Statistics Functions - section \ref{sec:StatisticsFunctions}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL - for real time queries only}
+		\end{itemize}
+\end{itemize}
+
+%==============================================================================%
+
+\subsection{Supported High-Level (Common) Functions}\label{sec:AppOSHighLevel}
+
+%==============================================================================%
+%int PWR_AppHintCreate( PWR_Obj obj, const char *hint_region_name, uint64_t   *hint_region_id, PWR_RegionHint hint, PWR_RegionIntensity level );
+\begin{prototype}{AppHintCreate}
+	\longdescription{
+The \texttt{PWR_AppHint*} functions are intended to be used by an application, 
+or application library, to supply power relevant hints to the operating system (or a runtime layer). 
+This function creates a tuning hint region-context that can be re-used, and indicates to the OS/runtime that
+information gathered from previous executions of this particular region can be used to determine effective strategies to improve
+power/performance efficiency on future runs.  
+The \texttt{PWR_RegionHint} hints are intended to be used by the application layer to indicate that it is 
+entering a \texttt{SERIAL, PARALLEL, COMPUTE} (computation intensive) or \texttt{COMMUNICATE, I/O or MEM_BOUND}
+(communication intensive, I/O intensive or memory bound) region. The
+\texttt{DEFAULT} hint types are used for defining regions that may be significant, but the type of region is unknown.
+The \texttt{GLOBAL_LOOP} hint type helps to denote the main computational loop for an application, which allows some
+runtimes to optimize machine power/performance balance.
+\texttt{PWR_RegionHint} type is described in section \ref{sec:AppOSTypeDefinitions} on page \pageref{type:RegionHint}.
+It is intended that these hints may be leveraged to provide some performance or power benefit, for example, a 
+hint may indicate that an intensely parallel region is about to happen, this may motivate the proactive migration
+of tasks to an accelerator or preemptively speed up cooling fans to proactively deal with the thermal load.
+\texttt{PWR_RegionIntensity}, described in section \ref{sec:AppOSTypeDefinitions} on page 
+\pageref{type:RegionIntensity} can be used for finer-grained hints than are possible with \texttt{PWR_RegionHint}.
+It is intended to allow for more explicit hints as to the intensity of the described region behavior. For example, 
+it can be used to describe the intensity of a memory bound region, which can be utilized by the runtime or 
+operating system in deciding what resources to allocate for a given power budget. \texttt{PWR_RegionIntensity} values
+are useful for all regions except for \texttt{GLOBAL_LOOP} regions.
+ It is expected that the implementation will use these hints whenever possible to increase application performance 
+while honoring energy/power targets or increase energy efficiency without incurring significant performance penalties.
+ \texttt{PWR_RegionIntensity} may be set to \texttt{PWR_REGION_INT_NONE} 
+if it is desirable for the operating system or a runtime to determine the intensity of resource usage dependent
+on the given hint. \texttt{PWR_REGION_INT_NONE} can also be used when the intensity of the described behavior is 
+not known. This parameter may be ignored by the OS.
+The \texttt{hint_region_name} is used to name a region and assign a ID number to that region.
+All \texttt{hint_region_name} values used \textbf{must be unique}.
+If a name is not specified (name input parameter is NULL), then the implementation will assign a unique name to the region.
+This will create and return a region ID that can be used in calls to \texttt{PWR_AppHintStart} to indicate
+the region that is being entered.
+This should be accompanied by a \texttt{PWR_RegionHint} type as described in section \ref{sec:AppOSTypeDefinitions} on page \pageref{type:RegionHint} and
+a \texttt{PWR_RegionIntensity} as described in section \ref{sec:AppOSTypeDefinitions} on page \pageref{type:RegionIntensity}.
+All calls to \texttt{PWR_AppHintCreate} should be matched to a call to \texttt{PWR_AppHintDestroy} (\ref{func:AppHintDestroy}). 
+\emph{Rationale: Giving hint regions human readable names facilitates easier display and debugging of information associated with the region,
+allowing for performance reports to be generated from the OS/runtime for regions of interest. /End Rationale}.
+	}
+	\returntype{int}
+	\parameter{PWR_Obj obj}		{\pInput}	{The object that the hint applies to.}
+	\parameter{const char *name}	{\pInput}	{A name for the region of code to receive the hint.}
+	\parameter{uint64_t *region_id}	{\pInputOutput}	{A region identifier created from the region name that can be used in subsequent hint calls.}
+	\parameter{PWR_RegionHint hint}	{\pInput}	{The hint corresponding to the code (behavioral) region being entered.}
+	\returnval{PWR_ERR_SUCCESS}{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}{Object does not support the requested operation}
+\end{prototype}
+
+
+%========================================================%
+%int PWR_AppHintDestroy(uint64_t   hint_region_id );
+\begin{prototype}{AppHintDestroy}
+	\longdescription{This function destroys a tuning hint region that was created with the \texttt{PWR_AppHintCreate} call.  For more information on the use of application tuning hints in regions, see~\ref{func:AppHintCreate}.  All calls to \texttt{PWR_AppHintCreate} should be matched to a call to \texttt{PWR_AppHintDestroy} (\ref{func:AppHintDestroy}).}
+	\returntype{int}
+	\parameter{uint64_t region_id}{\pInput}{The region identifier of the region to be destroyed.}
+	\returnval{PWR_ERR_SUCCESS}{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}{Object does not support the requested operation}
+\end{prototype}
+
+%=====================================================%
+%int PWR_AppHintStart(uint64_t hint_region_id);
+\begin{prototype}{AppHintStart}
+	\longdescription{
+The \texttt{PWR_AppHint*} functions are intended to be used by an application, 
+or application library, to supply power relevant hints to the operating system (or a runtime layer). 
+It is intentional that many of these hints do not directly imply that a power or energy adjustment will be made.
+\texttt{hint_region_id} values are used to indicate the region ID number supplied from the \texttt{PWR_AppHintCreate} function.
+A given region can only be started one, and requires a matched call to \texttt{PWR_AppHintStop()}.
+Subsequent calls to \texttt{PWR_AppHintStart} for a given region ID that has already been started without being
+stopped are ignored.
+Tuning hints for multiple regions may be nested, but the OS/runtime is not required to support more than a single
+region at a time. Therefore nested hints calls result in using the most recently started region and hint. When nested
+regions are stopped, the parent region's hint is re-applied. Consult your 
+implementation documentation to determine if blending of nested hints are supported (multiple hint regions being applied
+simultaneously).}
+	\returntype{int}
+	\parameter{uint64_t hint_region_id}{\pInput}{A region identifier of the region being entered.}
+	\returnval{PWR_ERR_SUCCESS}{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}{Object does not support the requested operation}
+\end{prototype}
+%========================================================%
+%int PWR_AppHintStop(uint64_t   hint_region_id );
+\begin{prototype}{AppHintStop}
+	\longdescription{ The \texttt{PWR_AppHint*} functions is intended to be used by an application, or application library, to supply power relevant hints to the operating system (or a runtime layer).  This function delineates the termination of a tuning hint region that was started with the \texttt{PWR_AppHintStart} call.}
+	\returntype{int}
+	\parameter{uint64_t region_id}{\pInput}{The region identifier of the region that is to be stopped.}
+	\returnval{PWR_ERR_SUCCESS}{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}{Object does not support the requested operation}
+\end{prototype}
+
+%=====================================================%
+%int PWR_AppHintProgress(uint64_t hint_region_id, double progress_fraction);
+\begin{prototype}{AppHintProgress}
+	\longdescription{The \texttt{PWR_AppHintProgress} function is intended to be used by an application, or application library, to indicate progress within a hint region. This can be used by underlying OS/runtimes to determine if adjustments made to the system based on the hint information are appropriate and facilitate further tuning. While use of this function is not required in order to use hints for code regions its use in encouraged as it may provide increased efficiency/performance from the OS/runtime.  This function call may be ignored by the OS or runtime if they do not support hint region tuning.}
+	\returntype{int}
+	\parameter{uint64_t region_id}		{\pInput}{A region identifier corresponding to the region making progress.}
+	\parameter{double progress_fraction}	{\pInput}{A value representing what fraction of the region/computation is complete as of this call to \texttt{PWR_AppHintProgress}.}
+	\returnval{PWR_ERR_SUCCESS}		{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}		{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}	{Object does not support the requested operation}
+\end{prototype}
+%==========================================================%
+%int PWR_SetSleepStateLimit( PWR_Obj obj, PWR_SleepState state );
+\begin{prototype}{SetSleepStateLimit}
+	\longdescription{\texttt{PWR_SetSleepStateLimit} allows the application to request that, when possible, the OS restrict the deepest sleep state (e.g. C-state) that the hardware can enter. It is important to note that this function does not place the object in a sleep state, it only suggests to the Operating System (or privileged layer) that it limit the deepest possible sleep state that the object can enter. The operating system or hardware are responsible for determining when hardware should be put to sleep. This is not required to be honored by the OS or HW, but serves as a hint to the OS as to the latency that can be tolerated when transitioning between sleep and active states. As the application cannot typically control the entry of hardware into sleep states this function is meant to provide a method for an application to express its latency tolerance in an environment where resources may be put into sleep states without the application's knowledge.  Applications calling \texttt{PWR_SetSleepStateLimit} are expected to make use of the \texttt{PWR_WakeUpLatency} call on page \pageref{func:WakeUpLatency} to provide information needed to determine the desired sleep state level.  Sleep states must conform to the \texttt{PWR_SleepState} type in section \ref{sec:AppOSTypeDefinitions} on page \pageref{type:SleepState}.}
+	\returntype{int}
+	\parameter{PWR_Obj obj}			{\pInput}{The object to set the sleep state on.}
+	\parameter{PWR_SleepState state}	{\pInput}{The sleep state to set as the maximum deepest sleep allowed.}
+	\returnval{PWR_RET_SUCCESS}		{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}		{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}	{Object does not support the requested operation}
+\end{prototype}
+
+%=========================================================%
+%int    PWR_WakeUpLatency( PWR_Obj obj, PWR_SleepState state, PWR_Time* latency );
+\begin{prototype}{WakeUpLatency}
+	\longdescription{ The \texttt{PWR_WakeUpLatency} function returns a value in nanoseconds that corresponds to the time required to resume normal operation when transitioning out of a given sleep state. If the supplied \texttt{PWR_Obj} does not support sleeping or the requested sleep state is not available then the function may return \texttt{PWR_RET_FAILURE}.  \emph{Advice to users: This function is useful when determining what sleep states can be exploited when knowledge of the length of time that certain operations (most likely remote ones) can be expected to take. Use of this function is intended to be paired with the \texttt{SetSleepStateLimit} function. Although users cannot use this function to place hardware into a sleep state, when used in conjunction with \texttt{SetSleepStateLimit} it can be used to suggest to an actor placing the hardware in a sleep state which state may be the most desirable. End of Advice to users.}}
+	\returntype{int}
+	\parameter{PWR_Obj obj}			{\pInput}  	{The object to query for latency.}
+	\parameter{PWR_SleepState state}	{\pInput} 	{The sleep state to transition out of.}
+	\parameter{PWR_Time* latency}		{\pOutput}	{The latency of the transition in nanoseconds.}
+	\returnval{PWR_RET_SUCCESS}		{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}		{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}	{Object does not support the requested operation}
+\end{prototype}
+
+%=========================================================%
+%int PWR_RecommendSleepState( PWR_Obj obj, PWR_Time latency, PWR_SleepState* state );
+\begin{prototype}{RecommendSleepState}
+	\longdescription{This is a convenience function for cases in which an application's maximum tolerable latency is known for a given region and a deepest possible sleep state for use with the \texttt{SetSleepStateLimit} function is desired. Calling \texttt{RecommendSleepState} with the known latency will return the sleep state that has the closest latency to the desired value without exceeding it.  Returned sleep states from this function conform to the \texttt{PWR_SleepState} type in section \ref{sec:AppOSTypeDefinitions} on page \pageref{type:SleepState}.}
+	\parameter{PWR_Obj obj}			{\pInput}	{The object to set the sleep state on.}
+	\parameter{PWR_Time latency}		{\pInput}	{The amount of latency tolerable to the application in nanoseconds.}
+	\parameter{PWR_SleepState* state}	{\pOutput}	{The deepest sleep state recommended to be used as a limit.}
+	\returnval{PWR_RET_SUCCESS}		{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}		{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}	{Object does not support the requested operation}
+\end{prototype}
+
+%=========================================================%
+%int    PWR_SetPerfState( PWR_Obj obj, PWR_PerfState state);
+\begin{prototype}{SetPerfState}
+	\longdescription{ The \texttt{PWR_SetPerfState} function is used to request that an object change its performance level.  The operating system is responsible for translating the abstracted \texttt{PWR_PerfState} value into an appropriate hardware-specific performance level (e.g. a CPU P-State).  Setting the performance state of an object is not guaranteed to result in the requested change. The operating system may choose to ignore it or the hardware may not honor the request. The user should not expect that once a performance state has been set that it will not change in the future. Multiple actors may also set the performance state, including in some cases, remote actors.}
+	\returntype{int}
+	\parameter{PWR_Obj obj}{\pInput}{The object to set the performance state on.}
+	\parameter{PWR_PerfState state}{\pInput}{The performance state to set the object to.}
+	\returnval{PWR_RET_SUCCESS}		{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}		{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}	{Object does not support the requested operation}
+\end{prototype}
+
+%=========================================================%
+%int    PWR_GetPerfState( PWR_Obj obj, PWR_PerfState* state);
+\begin{prototype}{GetPerfState}
+	\longdescription{ The \texttt{PWR_GetPerfState} function returns the performance state for any given object. The value that is returned is an abstracted value based on the real hardware state of the object that is mapped to the closest \texttt{PWR_PerfState} value. Objects must return \texttt{PWR_RET_FAILURE} if they do not support operating in different states.}
+	\returntype{int}
+	\parameter{PWR_Obj obj}		{\pInput }{The object to get the current performance state of.}
+	\parameter{PWR_PerfState* state}{\pOutput}{performance state of the object.}
+	\returnval{PWR_RET_SUCCESS}		{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE}		{Upon FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}	{Object does not support the requested operation}
+\end{prototype}
+
+%=========================================================%
+%int    PWR_GetSleepState( PWR_Obj obj, PWR_SleepState* state);
+\begin{prototype}{GetSleepState}
+	\longdescription{ The \texttt{PWR_GetSleepState} function returns the current sleep state for any given object.}
+	\returntype{int}
+	\parameter{PWR_Obj obj}		{\pInput }{The object to get the current sleep state of.}
+	\parameter{PWR_PerfState* state}{\pOutput}{The sleep state of the object.}
+	\returnval{PWR_RET_SUCCESS}		{SUCCESS}
+	\returnval{PWR_RET_FAILURE}		{FAILURE}
+	\returnval{PWR_RET_NOT_IMPLEMENTED}	{Object does not support the requested operation.}
+\end{prototype}
+
+

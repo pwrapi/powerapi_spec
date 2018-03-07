@@ -1,0 +1,26 @@
+The case for an HPC-community-adopted power API specification is compelling. 
+The demand for computational cycles continues to increase, as does the expense to power the cycles. 
+Hardware vendors are providing interfaces to power data and controls so that software can monitor usage and even control it. 
+To maximize utilization of these "knobs", a portable interface layer allows multiple software products to code to a generic layer which can be translated by the individual hardware vendors. 
+With this need in mind, the Power API defined herein sets out to address the following tenets.
+
+{\bf Very wide scope from facility to hardware component} This specification is not just limited to the hardware interfaces. 
+The information from the hardware is the enabler for this API. 
+However, the information is needed at many levels, from many different viewpoints. 
+In ~\cite{Laros:2013:PwrUseCase} we identified a discrete set of unique actors (a.k.a. users, which can be software components) communicating via the API. 
+In turn, these actors have interfaces with one or more systems within the scope of the API. 
+The actor/system combinations represent the variety of viewpoints. 
+For example, a batch job scheduler is more likely concerned about overall system and/or node power information, not the draw of a specific processor core or memory controller.
+
+{\bf Portability for software calling the API}  By grouping the function calls by actor/system combination, we attempted to strike a balance between a totally non-intuitive, but generic get/put interface and one that is overly prescriptive by focusing on pre-identified and specific software packages. 
+In addition to the actor/system calls, there is a set of calls to build the system ``diagram'' without having to rely on configuration files from a specific system type. 
+
+{\bf Flexibility for implementer of an API} As this is a new area, the specification provides interfaces that are adaptable as hardware power technology evolves. 
+The API is not based on any existing software-specific API. 
+We can envision ways that interfaces such as RAPL, DVFS, NVML, BGQT/EMON, ACPI, the PAPI power interface, OpenMPI's hwloc package, etc., etc. can become implementations for certain actor/system interfaces. 
+
+We strived to create a portable, implementable interface for power-aware computing. 
+We welcome all suggestions and comments. 
+
+
+

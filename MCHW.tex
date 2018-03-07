@@ -1,0 +1,65 @@
+The Monitor and Control/Hardware interface is targeted to support a critical function on HPC platforms (systems monitoring and management) often embodied in Reliability Availability and Serviceability (RAS) systems.
+RAS systems must evolve to measure and control power and energy relevant aspects of the system and serve this information and capability to administrators (Administrator/Monitor and Control Interface - section \ref{sec:AdminMC}), resource managers (Resource Manager/Monitor and Control Interface - section \ref{sec:RMMC}), accounting (Accounting/Monitor and Control Interface - section \ref{sec:AccMC}) and users (User/Monitor and Control Interface - section \ref{sec:UserMC}).
+The Monitor and Control Interface serves more other roles than any other system in this specification. 
+The base level functionality that is exposed through this interface is very similar to the Operating System/Hardware Interface (section \ref{sec:OSHW}) but the functional responsibilities of the role differ considerably.
+Some of the interfaces described in this specification imply data retention, or database, functionality. 
+The monitor and control software (RAS system) is a prime candidate to serve this purpose. 
+Low level power and energy data can be mined through the interfaces documented in this section and stored in raw or processed form in a database and made available for historic queries by other roles.
+
+\subsection{Supported Attributes}\label{sec:MCHWAttributes}
+
+As in the Operating System/Hardware interface (section \ref{sec:OSHW}) a significant amount of functionality for this interface is exposed through the attribute functions (section \ref{sec:Attributes}).
+The attribute functions in conjunction with the following attributes (Table \ref{table:MCHW}) expose numerous measurement  (get) and control (set) capabilities to the monitor and control system.
+
+\begin{attributetable}{Monitor and Control, Hardware - Supported Attributes}{table:MCHW}
+\aPstateDesc
+\aCstateDesc
+\aCstateLimitDesc
+\aSstateDesc
+\aCurrentDesc
+\aVoltageDesc
+\aPowerDesc
+\aMinPowerDesc
+\aMaxPowerDesc
+\aFreqDesc
+\aFreqLimitMinDesc
+\aFreqLimitMaxDesc
+\aEnergyDesc
+\aTempDesc
+\end{attributetable}
+
+\subsection{Supported Core (Common) Functions}\label{sec:MCHWSupportedCommon}
+
+\begin{itemize}[noitemsep,nolistsep] 
+	\item{Hierarchy Navigation Functions - section \ref{sec:Navigation}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Group Functions - section \ref{sec:Group}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Attribute Functions - section \ref{sec:Attributes}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Metadata Functions - section \ref{sec:METADATA}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Statistics Functions - section \ref{sec:StatisticsFunctions}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+\end{itemize}
+
+%==============================================================================%
+
+\subsection{Supported High-Level (Common) Functions}\label{sec:MCHWHighLevel}
+
+%==============================================================================%
+
+\subsection{Interface Specific Functions}\label{sec:MCHWFunctions}
+
+
+

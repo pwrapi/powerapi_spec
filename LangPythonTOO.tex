@@ -1,0 +1,595 @@
+\section{Theory Of Operation}\label{sec:PythonTheoryOfOperation}
+\subsection{Overview}\label{sec:PythonOverview}
+
+This section loosely follows the same tack as the C API chapter
+of the same name (chapter \ref{chap:Theory} on page \pageref{chap:Theory}). In
+particular, it discusses any remarkable caveats or differences between the
+Python Power API bindings and the C Power API specification. Because the
+intended audience of this section includes those with limited experience with
+Python, seasoned Python developers are forewarned of some pedantic explanations
+of Python behavior.
+
+%==============================================================================%
+\subsubsection{Python Version Agnosticism}\label{sec:PythonVersionAgnosticism}
+
+This Python specification aims to be agnostic with respect to Python versioning
+where possible. It is currently designed to include version 2.7 and on. In
+particular, considerations needed to include version 2.7 are made with respect
+to integer typing (section \ref{sec:PythonNumericTypes} on page
+\pageref{sec:PythonNumericTypes}) and enumerations (section
+\ref{sec:Enumerations} on page \pageref{sec:Enumerations}). Enumerations as
+explained later in this section follow a C-style syntax instead of the ``enum''
+data type available as of Python
+3.4.\footnote{https://docs.python.org/3/library/enum.html}
+
+%==============================================================================%
+\subsubsection{The Python import statement}\label{sec:PythonImport}
+
+Throughout this appendix the ``\texttt{pwr.}'' prefix is used on API class methods,
+functions, and variables so that they are identifiable in the document. The
+example below illustrates a typical usage of an Python module implementation of
+the API imported as \texttt{pwr}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+import <your.implementation.library.path> as pwr
+myPwrCntxt = pwr.Cntxt(...)
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Memory Management and Garbage Collection}\label{sec:PythonMemoryManagement}
+
+The C API specification is very precise in defining the enumerations,
+structures, and entry-points that are to be used to access the power
+measurement and control functionality exposed by the specification. In the
+pass-by-value C language, ``objects'' are precisely defined structures that are
+allocated (and freed) by the user of the API or the implementation of the API.
+The functions defined by the C API use opaque handles to identify or point to
+these objects to represent
+them and pass them around from place to place. Refer to the C API ``Theory of
+Operation'' section \ref{chap:Theory} on page \pageref{chap:Theory} for the
+language independent information.
+
+Python is an object-oriented language, and uses ``pass-by-object-reference'' to
+reference and transport data. Python treats everything as an object, including
+references to other objects, however, it has no native concept of pointers to
+locations in memory. Because of this, Python uses a garbage collection
+mechanism to clean up previously instantiated objects which have become
+completely de-referenced.
+
+For example, the C API call \texttt{PWR_CntxtInit()} returns a handle
+``myPwrCntxt'' that may identify or point to a location in memory containing
+the context structure:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+/* Example C code */
+PWR_Cntxt myPwrCntxt;
+rc = PWR_CntxtInit(PWR_CNTXT_DEFAULT, PWR_ROLE_RM, "foo", &myPwrCntxt);
+\end{lstlisting}\end{minipage}\end{center}
+
+The memory region pointed to by myPwrCntxt must be returned to the heap once
+the application is done using it. This explicit memory management is some of
+what necessitates the use of clean-up functions such as
+\texttt{PWR_CntxtDestroy(myPwrCntxt)}.
+
+With Python, ``myPwrCntxt'' is a reference to an instance of the
+\texttt{pwr.Cntxt} object class. Python counts the number of references to its
+objects, and once that count goes to ``0'', the object is garbage collected
+(freed). De-referencing an object such as ``myPwrCntxt'' can be implicitly
+performed by returning from the method or function in which it is being used,
+or explicitly performed by calling ``del'':
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+import <your.implementation.library.path> as pwr
+def someFunction():
+    myPwrCntxt = pwr.Cntxt(pwr.CntxtType.DEFAULT, pwr.Role.RM, "foo")
+    localEPObj = myPwrCntxt.GetEntryPoint()
+    ...
+    # Once this function returns, localEPObj is out of its scope, which
+    # causes Python garbage collection to free its memory. myPwrCntxt is
+    # not garbage collected as it is needed/returned to the caller.
+    return myPwrCntxt
+
+def anotherFunction():
+    LocalPwrCntxt = someFunction()
+    ...
+    # Explicitly releasing the LocalPwrCntxt object returned from
+    # someFunction() by calling del.
+    del LocalPwrCntxt
+    ...  # More to be done, but no further need for the LocalPwrCntxt object.
+\end{lstlisting}\end{minipage}\end{center}
+
+If myPwrCntxt is being used elsewhere, such as being passed via the return
+statement in a particular method or function, it is not freed (garbage
+collected) until all possible usage is out of scope. This automatic garbage
+collection eliminates the necessity to explicitly free the memory used by
+``myPwrCntxt''.
+
+%==============================================================================%
+\subsubsection{Encapsulation - Methods are part of the data classes}
+\label{sec:PythonEncapsulation}
+
+Another feature of Python is its object-oriented approach to defining data and
+the methods that act on that data. Since much of the C API specification is
+written with collections of functions using a few handles or pointers to
+identify common data structures as parameters, Python's object-oriented
+approach fits well with the existing C API. In Python, classes are defined, and
+those classes contain methods appropriate for the particular class. For
+instance in C, \texttt{PWR_CntxtInit()} returns an opaque handle,
+``myPwrCntxt''. That handle must be passed into functions as a parameter for
+that function to know what data to act on:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+/* Example C code: */
+PWR_Cntxt myPwrCntxt;
+PWR_Obj   myPwrObj;
+
+rc = PWR_CntxtInit(PWR_CNTXT_DEFAULT, PWR_ROLE_RM, "foo", &myPwrCntxt);
+if (rc != PWR_RET_SUCCESS)
+	exit(-rc);
+rc = PWR_CntxtGetEntryPoint(myPwrCntxt, &myPwrObj);
+if (rc != PWR_RET_SUCCESS)
+	exit(-rc);
+\end{lstlisting}\end{minipage}\end{center}
+
+\emph{Note: The example above adds error handling that validates the return code of the two
+C API functions called. This causes the C example to exit if one of the calls
+fail, resulting in the same ``exit on error'' behavior that the Python example
+that follows will exhibit. More on Python error handling in
+\ref{sec:PythonErrorHandling} on page \pageref{sec:PythonErrorHandling}.}
+
+In this Python API, \texttt{myPwrCntxt} is an object that is an instance of the
+\texttt{pwr.Cntxt} class and that object contains methods for acting on that
+object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrCntxt = pwr.Cntxt(pwr.CntxtType.DEFAULT, pwr.Role.RM, "foo")
+myPwrObj = myPwrCntxt.GetEntryPoint()
+\end{lstlisting}\end{minipage}\end{center}
+
+Descriptions and many more examples of class object and methods can be found in
+section \ref{sec:PythonCoreInterfaceFunctions} starting on page
+\pageref{sec:PythonCoreInterfaceFunctions}.
+
+%==============================================================================%
+\subsubsection{Enumerations}\label{sec:Enumerations}
+
+The C API relies heavily on C-style enumerations which, amongst other things,
+enforce strict type-checking, and can provide automatic incrementing of the
+enumeration's value. Python 2.7 has no direct support for enumerations.  This
+Python API specification defines support for enumerations so that they match in
+style and functionality with the defined enumerations in the C API. This
+enables strict type-checking and automatic incrementing of the enumeration's
+value definitions:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Example Colors Enumeration (not part of the specification)
+class Colors(_EnumerationClass):
+    pass
+Colors("Blue")
+Colors("Green")
+Colors("Red")
+Colors("Yellow")
+# Vendor implementations can add more entries here or look at
+# the object-oriented "Extending Existing Enumerations" description below.
+Colors("NUM_COLORS")
+Colors("INVALID", -1)
+Colors("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Example Sizes Enumeration (not part of the specification)
+class Sizes(_EnumerationClass):
+    pass
+Sizes("Small")
+Sizes("Medium")
+Sizes("Large")
+# Vendor implementations can add more entries here or look at
+# the object-oriented "Extending Existing Enumerations" description below.
+Sizes("NUM_SIZES")
+Sizes("INVALID", -1)
+Sizes("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+\emph{Implementation Note: Defining a class such as Colors with only the
+do-nothing \texttt{pass} statement imposes strict type-checking against the
+Colors class instead of the generic (and externally defined) \texttt{_Enumeration}
+class. The subsequent ``constructors'' being called to define the specific
+enumerations such as Colors(``Green'') actually add the definition into
+the Colors class itself, as opposed to instantiating the Colors
+class. This is implemented using Python ``MetaClasses''.}
+
+%==============================================================================%
+\paragraph{Enumerations Extension}\label{sec:EnumerationsExtension}
+
+Enumerations can be extended in two ways: (1) By adding more entries before the
+\texttt{NUM_classname} entry, as shown in the example above, or (2) by extending a
+defined \texttt{EnumerationClass} in an object-oriented way, as illustrated here:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Likely in some other vendor specific file...
+Colors("Black", Colors.NUM_COLORS)
+Colors("NUM_COLORS")  # to reset NUM_COLORS
+#
+Sizes("X-Large", Sizes.NUM_SIZES)
+Sizes("NUM_SIZES")  # to reset NUM_SIZES
+\end{lstlisting}\end{minipage}\end{center}
+
+The code examples above show how a vendor implementation can extend a defined
+\texttt{EnumerationClass} in this specification.
+
+%==============================================================================%
+\paragraph{Enumerations Usage}\label{sec:EnumerationsUsage}
+
+The following examples show Python code using some of the enumerations defined
+in section \ref{sec:PythonContextReleventTypeDefinitions} starting on page
+\pageref{sec:PythonContextReleventTypeDefinitions}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Using enumerations as parameters
+myPwrCntxt = pwr.Cntxt(pwr.CntxtType.DEFAULT, pwr.Role.RM, "foo")
+
+# Return the value of an enumeration
+enumVal = int(pwr.Role.RM)  # Gives a value of 4 to enumVal
+
+# Return the name of the enumeration:
+enumStr = str(pwr.Role.RM)  # Gives "RM" to enumStr
+
+# Strict type-checking can be enforced
+class Cntxt():
+    def __init__(self, cntxtType, cntxtRole, cntxtName):
+    ...
+    if not isinstance(cntxtType, CntxtType):
+            raise PwrError( ReturnCode.BAD_VALUE,
+                "{0:s}: Invalid context type.".format(self.__class__.__name__))
+    ...
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Numeric Types}\label{sec:PythonNumericTypes}
+
+Python represents integer, unlimited length integer, and floating point numbers
+with its respective ``int'', ``long'' and ``float'' built-in types. A Python
+``float'' is equivalent to a C double. Unlike Python 3.0, Python 2.7 still
+distinguishes an ``int'' type from an unlimited-length ``long''. Python
+implementations of this API shall use long for all integer types.
+
+%==============================================================================%
+\subsubsection{Time Entities}\label{sec:PythonTimeEntities}
+
+The C API specification in section \ref{sec:TimeRelatedDefinitions} on page
+\pageref{sec:TimeRelatedDefinitions} describes encapsulating a 64-bit integer
+representing a time value in nanoseconds. Python represents a time value in its
+\texttt{time} module using a floating point number representing time in seconds.
+Since Python time values are a floating point values (e.g., $13.434582349$
+seconds) no precision is lost representing time this way. Conversion back and
+forth between the C style integer representation and Python's default floating
+point format can be done as follows:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Convert Python's floating point "seconds" value to a long
+# integer representing "nanoseconds":
+timeIntNs = long(timeFloatSec * 1000000000.0)
+
+# Convert a long integer representing a count of "nanoseconds" to a Python
+# "float" value containing a possible fractional value of "seconds":
+timeFloatSec = float(timeIntNs) / 1000000000.0
+\end{lstlisting}\end{minipage}\end{center}
+
+The preferred Python implementation for handling time in this API is described
+in section \ref{class:Time} on page \pageref{class:Time}.
+
+%==============================================================================%
+\subsubsection{Error Handling}\label{sec:PythonErrorHandling}
+
+Error handling in the C API specification generally involves checking for a
+non-zero integer return-code value. Python supports two methodologies for
+robust error handling: (1) exceptions and (2) the ability of a method or
+function to return multiple values (in the form of a tuple). Returning multiple
+values enables the return of an error code alongside of an expected (or
+unexpected) result. This Python API specification uses Python exceptions for
+things that are generally seen as fatal errors. Some functions in the API that
+``get'' or ``set'' values use per-value return codes to continue the operation
+in the face of non-fatal errors.
+
+Exceptions give the ability to funnel any errors in a Python method or function
+through one or more error tracking regions wrapped by Python
+\texttt{try/except} clauses. Errors that occur while instantiating objects,
+i.e. when the class's \texttt{__new__()} and \texttt{__init__()} methods are
+invoked, need to be handled using Python exceptions. This is primarily because
+some of the Python library initialization methods raise exceptions themselves
+and a class \texttt{__init__()} method does not return any value at all. For
+these reasons, this Python specification uses the Exception methodology.
+
+In this specification, some methods return arrays of measurement information
+that may contain error information for individual measurements. These methods
+may encounter an error reading an attribute on a particular object in the
+group, but the rest of the attributes from the operation should not be thrown
+away. For this type of functionality exceptions are only raised in the case of
+a fatal error, and per-element access errors are handled with error status
+information in results data structures.
+
+For ``Get'' methods that return or yield multiple results from multiple
+operations such as the \texttt{AttrGetValue(s)} methods and the
+\texttt{pwr.Stat.GetValue(s)} methods, the \texttt{pwr.ReturnCode} value is
+included with the measurement data for any particular operation. If the return
+code value is set to \texttt{pwr.ReturnCode.SUCCESS}, then the measurement data
+is valid. Otherwise the data is invalid, and the return code is set to be
+something besides \texttt{pwr.ReturnCode.SUCCESS}. See
+\ref{meth:ObjAttrGetValue} on page \pageref{meth:ObjAttrGetValue} for more
+details.
+
+Similarly, ``Set'' operations will yield failure details when errors occur.  If
+there are no errors, nothing will be generated.  See \ref{meth:ObjAttrSetValue}
+information returned.
+
+%==============================================================================%
+\paragraph{Class PwrError} \label{class:PwrError}
+
+An example is shown below of the definition of the
+\texttt{Exception} class that is used throughout this
+Python API specification. See section \ref{class:ReturnCode} on page
+\pageref{class:ReturnCode} for supported API ReturnCodes. All exceptions
+generated by implementation of this specification should use and check for this
+Exception class. Other system-level exceptions that may occur should be
+accounted for but are not described in this document. Please refer to
+system-level Python documentation for details on these other exceptions.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class PwrError(EnvironmentError):
+    def __init__(self, returnCode, errorMsg = None):
+        # returnCode      --> e.errno
+        # str(returnCode) --> e.strerror
+        # errorMsg        --> e.errmsg
+        ...
+\end{lstlisting}\end{minipage}\end{center}
+
+Below is an example of the \texttt{pwr.PwrError} exception:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+import <your.implementation.library.path> as pwr
+
+def someOptionalMethod():
+    # Is not implemented
+    raise PwrError( ReturnCode.NOT_IMPLEMENTED,
+        "{0:s}: someOptionalMethod not implemented!".format(
+            self.__class__.__name__))
+
+def ExampleOfExceptionHandling():
+    ...
+    defaultResult = None
+    try:
+        theResult = myPwrObj.someOptionalMethod()
+        theResult += myPwrObj.SomeOtherMethod()
+
+    except PwrError as e:
+        print "ERROR!"
+        print e.errno     # "-2"
+        print e.strerror  # "NOT_IMPLEMENTED"
+        print e.errmsg    # "someOptionalMethod not implemented!"
+        return defaultResult
+        # "raise" can also be called here.
+    else:
+        return theResult
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\paragraph{Multiple Return Values}\label{sec:PythonMultipleReturnValues}
+
+Python seemingly has the capability to return multiple values from a method or
+function. These multiple values are actually contained within a single object.
+This follows from the fact that everything is an object in Python, including
+tuples, which is an object that contains a collection of other objects:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+def SomeMethodOrFunction():
+    return 1, 2
+    # or "return (1, 2)"
+\end{lstlisting}\end{minipage}\end{center}
+
+The method or function can be called two ways: either returning the elements of
+the tuple or the entire tuple as one indexed object (an array). Here the
+tuple's elements are returned:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+retval1, retval2 = SomeMethodOrFunction()
+# or "(retval1, retval2) = SomeMethodOrFunction(arg)"
+print str(retval1)  # prints "1"
+print str(retval2)  # prints "2"
+\end{lstlisting}\end{minipage}\end{center}
+
+Here everything is treated as the singular-indexed tuple object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+retval = SomeMethodOrFunction()
+print str(retval[0])  # prints "1"
+print str(retval[1])  # prints "2"
+\end{lstlisting}\end{minipage}\end{center}
+
+In the case where a method or function returns a tuple of several arrays that
+relate one-to-one with each other element-wise, they can be re-arranged to be an
+array of tuples.  This arrangement which may be more programmatically simple to iterate over,
+among other things. Below is an example of how to convert a tuple of arrays to
+an array of tuples using the standard built-in Python function, \texttt{zip}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+def SomeGroupMethodOrFunction(arg):
+    return [1,2,3], [4,5,6]
+array1, array2 = SomeGroupMethodOrFunction(arg)
+print array1         # prints "[1,2,3]"
+print array2         # prints "[4,5,6]"
+combinedArray = zip(array1, array2)
+print combinedArray  # prints [(1,4),(2,5),(3,6)]
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Iterators and Generators}\label{sec:PythonIteratorsGenerators}
+
+Python has a special \texttt{yield} statement which allows a method or function to
+return or ``generate'' a result without exiting from the logic flow of that
+method or function. This allows an ``Iterator'' method/function to loop and
+collect or act upon the particular objects that a ``Generator'' method/function
+may yield. This technique can be used to avoid the creation of very long,
+memory intensive lists of objects such as those represented by a
+\texttt{pwr.Grp} object.
+
+In this Python specification, ``Generators'' are exposed as part of the API.
+They complement the normal, list-giving methods as defined in the C API, but do
+not replace them. They are prefixed with the name ``Generate''. For example,
+the method \texttt{GenerateChildren()} complements the \texttt{GetChildren}
+method documented in \ref{meth:GetChildren} on page
+\pageref{meth:GetChildren}). The following are some example functions
+illustrating the use of iterators and generators versus lists:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# This function creates a list of objects and returns it to the calling function.
+# The entire list is created in memory before it is returned to the caller.
+def ObjectLister(numObjs):
+    objList = []
+    for objNum in numObjs:
+        newObj = ExampleObj()
+        objList.append(newObj)
+    return objList
+
+# This function generates objects on the fly, and yields each object it creates
+# to the calling function one at a time. The code flows back into this generator
+# on each iteration of the calling functions for loop.
+def ObjectGenerator(numObjs):
+    for objNum in numObjs:
+        newObj = ExampleObj()
+        yield newObj
+
+def ObjectConsumer():
+    for someObj in ObjectGenerator(1000000):
+        # ObjectGenerator has yielded another object for this function to use.
+        useObjectOnce(someObj)  # Each individual "someObj" is garbage collected
+
+    # Here ObjectLister() creates/returns the entire list all at once.
+    for someObj in ObjectLister(1000000):
+        # This function iterates over the list, and then when it is done with the
+        # entire list, the list and its objects get garbage collected.
+        useObjectOnce(someObj)
+
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Shortcuts using Properties}\label{sec:PythonShortcutsProperties}
+Python offers the ability to attach ``properties'' to class methods and to
+overload operators so that simple ``set'' and ``get'' methods and operators
+on a class can appear and behave like standard class-variables. These
+shortcuts make for simpler and more concise code. Throughout this Appendix,
+these shortcuts will be mentioned for the various functions, methods and
+operators for which they are available.
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# The standard way...
+myEntryPoint = cntxt.GetEntryPoint()
+myAttr = myPwrObj.AttrGetValue(pwr.AttrName.TEMP)
+myAttrMeta = myPwrObj.AttrGetMeta(pwr.AttrName.TEMP, pwr.MetaName.SAMPLE_RATE)
+unionGroup = myPwrGrp.Union(someOtherPwrGrp)
+
+# With properties...
+myEntryPoint = cntxt.entrypoint
+myAttr = myPwrObj.TEMP.value
+myAttrMeta = myPwrObj.TEMP.SAMPLE_RATE
+unionGroup = myPwrGrp | someOtherPwrGrp
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsection{Power API Initialization}\label{sec:PythonPowerAPIInitialization}
+Initialization is accomplished by instantiating the \texttt{pwr.Cntxt} class
+which returns a \texttt{pwr.Cntxt} object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+import <your.implementation.library.path> as pwr
+myPwrCntxt = pwr.Cntxt(CtxtType,  # pwr.CntxtType
+                       Role,      # pwr.Role
+                       Name)      # Python str
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Roles}\label{sec:PythonRoles}
+All of the same roles in the C API specification (section \ref{sec:Roles} on
+page \pageref{sec:Roles}) should be supported by valid Python implementations.
+
+\subsection{System Description}\label{sec:PythonSystemDescription}
+
+All of the object types in the C API ``System Description'' (section
+\ref{sec:PowerAPIBaseSysDesc}  on page \pageref{sec:PowerAPIBaseSysDesc}) are
+represented by a Python base class, \texttt{pwr.Obj}. The \texttt{pwr.Obj} base
+class supports functionality such as: obtaining an object's parent, obtaining
+its children, getting the object's type, and navigating the object tree. Power
+object type specific functionality is represented in child classes of the base
+\texttt{pwr.Obj} class.
+
+The C API on page \pageref{sec:PowerAPIBaseSysDesc}, states that a variety
+of object types are to be defined, but not necessarily used or supported. These
+are: ``Platform'', ``Cabinet'', ``Chassis'', ``Board'', ``Node'', ``Socket'',
+``Power Plane'', ``Core'', ``Memory'', and ``NIC''. In the C API specification,
+opaque handles, which can be pointers, are used to point to these various abstracted
+objects.  However, in Python, separate child classes to the \texttt{pwr.Obj} class
+are created to represent these various types of objects. These object types are
+represented by respectively named child classes such as
+\texttt{pwr.ObjPlatform}, \texttt{pwr.ObjCabinet}, and \texttt{pwr.ObjBoard}.
+
+\subsection{Attributes}\label{sec:PythonAttributes}
+
+Each Python \texttt{pwr.Obj} object has two sets of associated attributes,
+``Global'' and ``Explicit''. Refer to the C API ``Attributes'' section
+\ref{sec:TheoryAttributes} on page \pageref{sec:TheoryAttributes} for language
+independent details. Global attributes are guaranteed to exist on every type of
+\texttt{pwr.Obj}.
+
+Global attributes are accessed through methods defined in the base
+\texttt{pwr.Obj} class, such as \texttt{GetName}, \texttt{GetType},
+\texttt{GetParent}, \texttt{GetChildren/GenerateChildren}, e.g.:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myType = myPwrObj.GetType()
+myName = myPwrObj.GetName()
+myParent = myPwrObj.GetParent()
+myChildren = myPwrObj.GetChildren()
+\end{lstlisting}\end{minipage}\end{center}
+
+The \texttt{GetEntryPoint} context method is accessed via the
+\texttt{pwr.Cntxt} class and returns the entry point object of the context's
+system description:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+import <your.implementation.library.path> as pwr
+myPwrCntxt = pwr.Cntxt(pwr.CntxtType.DEFAULT, pwr.Role.MC, "MonitorAndControl")
+myPwrObj = myPwrCntxt.GetEntryPoint()
+\end{lstlisting}\end{minipage}\end{center}
+
+Explicit attributes are attributes that may be unique to one or more
+\texttt{pwr.Obj} object types. They are accessed via the attribute interface.
+For details on Python attribute methods, see section
+\ref{sec:PythonAttributeMethods} on page \pageref{sec:PythonAttributeMethods}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+attrName = pwr.AttrName.POWER
+measurement1 = myPwrObj.AttrGetValue(attrName)
+measurement2 = myPwrObj.AttrGetValue(pwr.AttrName.VOLTAGE)
+\end{lstlisting}\end{minipage}\end{center}
+
+The attribute interface is preferred over explicit methods so that additional
+API methods are not necessary to expand functionality for a particular
+object type.
+
+\subsection{Metadata}\label{sec:PythonMetadata}
+Metadata are supported as detailed in section \ref{sec:TheoryMetadata} on page
+\pageref{sec:TheoryMetadata} of the C API.
+
+To access metadata for a particular object attribute:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+attrName  = pwr.AttrName.PSTATE
+metaName  = pwr.MetaName.MIN
+minPstate = myPwrObj.AttrGetMeta(attrName, metaName)
+maxPstate = myPwrObj.AttrGetMeta(pwr.AttrName.PSTATE, pwr.MetaName.MAX)
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Thread Safety}\label{sec:PythonThreadSafety}
+
+There is no difference in the way threading is to be handled versus what is described
+in the C API.
+Please refer to the C API specification (section \ref{sec:ThreadSafety} on
+page \pageref{sec:ThreadSafety}) for a discussion on threading and
+multiprocessing concerns.

@@ -1,0 +1,531 @@
+\section{Type Definitions}\label{sec:PythonTypeDefinitions}
+
+This chapter lists the enumerations and classes associated with the Python
+version of the Power API and mirrors the naming and numbering used in the C
+API specification (found in chapter \ref{chap:TypeDefinitions} starting on page
+\pageref{chap:TypeDefinitions}). The enumerations listed in this section are
+required to exist, but not all enumerated values are required to be supported
+by any specific Python implementation of the Power API. Some of the
+enumerations are meant to be expanded, while some are not. Each of the sections
+below discuss what compliant Python versions of these enumerations and
+structures (classes) look like and whether they can be expanded upon. 
+
+\subsection{Opaque Types}\label{sec:PythonOpaqueTypes}
+The opaque types described in \ref{sec:OpaqueTypes} on page
+\pageref{sec:OpaqueTypes} are represented as Python base classes with the
+exception of the \texttt{PWR_Status} structure. The \texttt{PWR_Status}
+structure is used for returning error status on functions that perform multiple
+operations.  Python implementations handle these errors differently and do not
+need to use the \texttt{PWR_Status} structure.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class Cntxt(...):
+    ...
+class Grp(...):
+    ...
+class Obj(...):
+    ...
+class Stat(...):
+    ...
+\end{lstlisting}\end{minipage}\end{center}
+
+These opaque abstract classes are meant to be overloaded by specific
+implementations of this Python API. The discussion of the object type child
+classes of the \texttt{pwr.Obj} class in section
+\ref{sec:PythonSystemDescription} on page \pageref{sec:PythonSystemDescription}
+illustrates this. 
+
+\subsection{Globally Relevant Definitions}
+\label{sec:PythonGloballyRelevantDefinitions} 
+
+The Python bindings support all of the C API's global definitions (see page
+\pageref{sec:GlobalTypes}), such as the version number definitions that are
+useful in the Python API. Definitions like the maximum length of text-strings,
+are not useful since Python automatically handles allocation and garbage
+collection for strings. PWR_MAJOR_VERSION and PWR_MINOR_VERSION are exposed
+through the \texttt{pwr.GetMajorVersion()} and \texttt{pwr.GetMinorVersion()}
+functions defined in section \ref{sec:PythonVersionFunctions} on page
+\pageref{sec:PythonVersionFunctions}).
+
+\subsection{Context Relevant Type Definitions}
+\label{sec:PythonContextReleventTypeDefinitions}
+
+The Python bindings support the necessary power contexts needed for 
+implementation and follows the design of the C API as defined on page
+\pageref{sec:ContextTypeDefinitions}. Power contexts use the Python
+enumeration scheme described in \ref{sec:Enumerations} on starting on page
+\pageref{sec:Enumerations} and contain a single ``Default'' power context
+enumeration. The default context type carries with it the default capabilities
+of the API. For vendor, platform, and model-specific capabilities, implementors can add new context types.
+
+%==============================================================================%
+\subsubsection{Enumeration Class CntxtType}\label{class:CntxtType}
+
+All implementations must support the \texttt{"DEFAULT"} context. The corresponding C
+API enumeration is on page \pageref{type:CntxtType}. The following is the enumeration
+for the default context type:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class CntxtType(_EnumerationClass):
+    pass
+CntxtType("DEFAULT")
+\end{lstlisting}\end{minipage}\end{center}
+
+Add the following to extend the enumeration for context types for a new, non-default vendor.
+(see ``Enumerations Extension'' \ref{sec:EnumerationsExtension} on page
+\pageref{sec:EnumerationsExtension}):
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+CntxtType("VENDORNAME")
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Enumeration Class Role}\label{class:Role}
+
+Default roles are defined by the \texttt{pwr.Role} enumeration. All
+contexts support one or more of these roles. See page
+\pageref{type:Role} for the C API \texttt{enum} definition.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class Role(_EnumerationClass):
+    pass
+Role("APP")    # Application
+Role("MC")     # Monitor and Control
+Role("OS")     # Operating System
+Role("USER")   # User
+Role("RM")     # Resource Manager
+Role("ADMIN")  # Administrator
+Role("MGR")    # HPCS Manager
+Role("ACC")    # Accounting
+#
+# Vendor implementations SHALL NOT add roles!
+#
+Role("NUM_ROLES")
+Role("INVALID", -1)
+Role("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}\label{sec:PythonPWRRoleDefinition}
+
+\subsection{Object Relevant Type Definitions}
+\label{sec:PythonObjectRelevantTypeDefinitions}
+
+%==============================================================================%
+\subsubsection{Enumeration Class ObjType}\label{class:ObjType}
+
+All implementations of the Power API are required to have the following object
+types enumerated. Implementations may add object types to these defaults, but
+must do so using the methods described in \ref{sec:EnumerationsExtension} on
+page \pageref{sec:EnumerationsExtension}. The corresponding C API enumeration
+is on page \pageref{type:ObjType}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class ObjType(_EnumerationClass):
+    pass
+ObjType("PLATFORM")
+ObjType("CABINET")
+ObjType("CHASSIS")
+ObjType("BOARD")
+ObjType("NODE")
+ObjType("SOCKET")
+ObjType("CORE")
+ObjType("POWER_PLANE")
+ObjType("MEM")
+ObjType("NIC")
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+ObjType("NUM_OBJ_TYPES")
+ObjType("INVALID", -1)
+ObjType("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Attribute Relevant Type Definitions}
+\label{sec:PythonAttributeRelevantTypeDefinitions}
+
+%==============================================================================%
+\subsubsection{Enumeration Class AttrName}\label{class:AttrName}
+
+The following default attributes must be enumerated in any implementation of
+this API. If more attributes are desired to be added for a particular
+implementation, see the methods described in \ref{sec:EnumerationsExtension} on
+page \pageref{sec:EnumerationsExtension}. The corresponding C API enumeration
+is on page \pageref{type:AttrName}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class AttrName(_EnumerationClass):
+    pass
+AttrName("PSTATE")           # Python long
+AttrName("CSTATE")           # Python long
+AttrName("CSTATE_LIMIT")     # Python long
+AttrName("SSTATE")           # Python long
+AttrName("CURRENT")          # Python float, amps
+AttrName("VOLTAGE")          # Python float, volts
+AttrName("POWER")            # Python float, watts
+AttrName("POWER_LIMIT_MIN")  # Python float, watts
+AttrName("POWER_LIMIT_MAX")  # Python float, watts
+AttrName("FREQ")             # Python float, Hz
+AttrName("FREQ_LIMIT_MIN")   # Python float, Hz
+AttrName("FREQ_LIMIT_MAX")   # Python float, Hz
+AttrName("ENERGY")           # Python float, joules 
+AttrName("TEMP")             # Python float, degrees Celsius
+AttrName("OS_ID")            # Python long
+AttrName("THROTTLED_TIME")   # Python long
+AttrName("THROTTLED_COUNT")  # Python long
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+AttrName("NUM_ATTR_NAMES")
+AttrName("INVALID", -1)
+AttrName("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Built-in Support for AttrDataType}
+\label{sec:PythonPwrAttrDataType}
+
+In the C API specification a \texttt{pwr.AttrDataType} enumeration is defined.
+This is to ease the type checking of data coming from various power attributes.
+In Python, object ``typing'' is built-in such that this enumeration
+becomes redundant and not meaningful.
+
+There are two basic data types found to represent the various values that may
+be used with any valid Python API methods; ``long'' and ``float''. They may be
+type-checked as follows:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+val = SomeMethodOrFunction()
+if not isinstance(val, float):
+    raise pwr.PwrError(pwr.ReturnCode.BAD_VALUE, "Bad temperature value returned!")
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Class AttrAccessError} \label{class:AttrAccessError}
+
+In the Python API, the \texttt{PWR_AttrAccessError} (along with the
+\texttt{PWR_Stat} structure), have been replaced by the functionality of
+\textit{measurement} named tuples and lists of \textit{measurement} named tuples. For
+details on these named tuples, please refer to the discussion on \texttt{AttrGetValue}
+and \texttt{AttrSetValue} starting at \ref{meth:ObjAttrGetValue} on page
+\pageref{meth:ObjAttrGetValue}.
+
+\subsection{Metadata Relevant Type Definitions}
+\label{sec:PythonMetadataRelevantTypeDefinitions}
+
+%==============================================================================%
+\subsubsection{Enumeration Class MetaName}\label{class:MetaName}
+
+The default implementation/context must at least have these Metadata names
+enumerated. Additional metadata names may be defined using the methods
+described in \ref{sec:EnumerationsExtension} on page
+\pageref{sec:EnumerationsExtension}. The corresponding C API enumeration is on
+page \pageref{type:MetaName}:
+
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class MetaName(_EnumerationClass):
+    pass
+MetaName("NUM")              # Python long
+MetaName("MIN")              # Python long or Float (depending on attr. type)
+MetaName("MAX")              # Python long or Float (depending on attr. type)
+MetaName("PRECISION")        # Python long
+MetaName("ACCURACY")         # Python Float
+MetaName("UPDATE_RATE")      # Python Float
+MetaName("SAMPLE_RATE")      # Python Float
+MetaName("TIME_WINDOW")      # pwr.Time object
+MetaName("TS_LATENCY")       # pwr.Time object
+MetaName("TS_ACCURACY")      # pwr.Time object
+MetaName("MAX_LEN")          # Python long (max length of any metadata string)
+MetaName("NAME_LEN")         # Python long (max length of NAME)
+MetaName("NAME")             # Python String
+MetaName("DESC_LEN")         # Python long (max length of DESC)
+MetaName("DESC")             # Python String
+MetaName("VALUE_LEN")        # Python long (max length of meta value at index)
+MetaName("VENDOR_INFO_LEN")  # Python long (max length of VENDOR_INFO
+MetaName("VENDOR_INFO")      # Python String
+MetaName("MEASURE_METHOD")   # Python long (0/1 depending on real/model meas.)
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+MetaName("NUM_META_NAMES")
+MetaName("INVALID", -1)
+MetaName("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+\emph{Implementation Note: The ``LEN''-related definitions above are not
+useful in any Python implementation but are included for consistency with the C API specification.}
+
+\subsection{Error Return Definitions}\label{sec:PythonErrorReturnDefinition}
+
+%==============================================================================%
+\subsubsection{Enumeration Class ReturnCode}\label{class:ReturnCode}
+
+The following error definitions are required to be defined for every
+implementation of the API. New return code definitions may be added at the end
+of this list. The corresponding C API enumeration is on page
+\pageref{sec:ErrorReturnDefinitions}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class ReturnCode(_EnumerationClass):
+    negative = True
+ReturnCode("WARN_NO_GRP_BY_NAME",  5)
+ReturnCode("WARN_NO_OBJ_BY_NAME",  4)
+ReturnCode("WARN_NO_CHILDREN",     3)
+ReturnCode("WARN_NO_PARENT",       2)
+ReturnCode("WARN_NOT_OPTIMIZED",   1)
+#
+ReturnCode("SUCCESS")            #  0
+ReturnCode("FAILURE")            # -1
+ReturnCode("NOT_IMPLEMENTED")    # -2
+ReturnCode("EMPTY")              # -3
+ReturnCode("INVALID")            # -4
+ReturnCode("LENGTH")             # -5
+ReturnCode("NO_ATTRIB")          # -6
+ReturnCode("NO_META")            # -7
+ReturnCode("READ_ONLY")          # -8
+ReturnCode("BAD_VALUE")          # -9
+ReturnCode("BAD_INDEX")          # -10
+ReturnCode("OPT_NOT_ATTEMPTED")  # -11
+ReturnCode("NO_PERM")            # -12
+ReturnCode("OUT_OF_RANGE")       # -13
+ReturnCode("NO_OBJ_AT_INDEX")    # -14
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Time Related Definitions}
+\label{sec:PythonTimeRelatedDefinitions}
+
+In the C API, \texttt{uint64} (unsigned 64-bit integer) values are used to represent a
+value in nanoseconds. Native Python time values are stored in floating point
+format. A full description of why Python implementations of the Power API needs
+some extra features is given in section \ref{sec:PythonTimeEntities} on page
+\pageref{sec:PythonTimeEntities}. The preferred implementation for handling
+time in Python implementations of the Power API is as follows:
+
+%==============================================================================%
+\subsubsection{Class Time} \label{class:Time}
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class Time(long):
+    def __init__(self, timeVal):
+        # convert to ns if timeVal is a float (seconds) value
+        ...
+# To access:
+now = pwr.Time():    # A generic, opaque time value
+nowNs = long(now)    # Converts and returns the time value to a long integer
+                     #   representing a number of nanoseconds.
+nowSec = float(now)  # Converts and returns the time value to a floating point
+                     # value representing a number of seconds.
+\end{lstlisting}\end{minipage}\end{center}
+
+A set of definitions is used for defining what a time value set to
+\texttt{None} means:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+PWR_TIME_UNINIT  = None  # Time value was never initialized
+PWR_TIME_UNKNOWN = None  # Time value was never recorded
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Class TimePeriod} \label{class:TimePeriod}
+
+The \texttt{PWR_TimePeriod} struct in C on page \pageref{type:TimePeriod}, is
+represented in Python by a class:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+
+class TimePeriod():
+    def __init__(self,
+                 start = TIME_UNINIT,
+                 stop = TIME_UNINIT,
+                 instant = TIME_UNINIT):
+        self._start = Time(start)
+        self._stop  = Time(stop)
+        self._instant = Time(instant)
+    ...
+\end{lstlisting}\end{minipage}\end{center}
+
+To access the various data items of the pwr.TimePeriod class instance,
+``myTimePeriod'': 
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Get (read) access
+startTimeSec = float(myTimePeriod.start)  # as Seconds     (float value)
+stopTimeNs = long(myTimePeriod.stop)      # as Nanoseconds (long value)
+instantTime = myTimePeriod.instant        # as pwr.Time    (pwr.Time object)
+# Set (write) access
+myTimePeriod.start = startTimeNs          # (a long value)
+myTimePeriod.stop = stopTimeSec           # (a float value)
+myTimePeriod.instant = PWR_TIME_UNINIT    # (None)
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Statistics Relevant Type Definitions}
+\label{sec:PythonStatisticsRelevantTypeDefinitions}
+
+For background on the overall support for statistics in the Power API refer to
+section \ref{sec:StatisticTypeDefinitions} on page
+\pageref{sec:StatisticTypeDefinitions}, and  the ``Statistics Functions'' in
+section \ref{sec:StatisticsFunctions} starting on page
+\pageref{sec:StatisticsFunctions}.
+
+%==============================================================================%
+\subsubsection{Enumeration Class AttrStat}\label{class:AttrStat}
+
+The following class \texttt{AttrStat(_EnumerationClass)} includes the list of
+currently-defined statistics potentially available to the user of an
+implementation. Additional Statistics operations may be vendor-defined using
+the methods described in \ref{sec:EnumerationsExtension} on page
+\pageref{sec:EnumerationsExtension}. See section \ref{type:AttrStat} on page
+\pageref{type:AttrStat} for the C API enumeration:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class AttrStat(_EnumerationClass):
+    pass
+AttrStat("MIN")
+AttrStat("MAX")
+AttrStat("AVG")
+AttrStat("STDEV")
+AttrStat("CV")
+AttrStat("SUM")
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+AttrStat("NUM_ATTR_STATS")
+AttrStat("INVALID", -1)
+AttrStat("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Enumeration Class ID}\label{class:ID}
+
+The C API definition for the PWR_ID enumeration is on page \pageref{type:ID}.
+Python implementations use ID-enumerated types in support of the method
+GetReportByID in section \ref{meth:GetReportByID}. Vendor specific additions to
+this enumeration class can be added using the methods described in
+\ref{sec:EnumerationsExtension} on page \pageref{sec:EnumerationsExtension}.
+The corresponding C API enumeration is on page \pageref{type:ID}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class ID(_EnumerationClass):
+    pass
+ID("USER")
+ID("JOB")
+ID("RUN")
+#
+ID("NUM_IDS")
+ID("INVALID", -1)
+ID("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{OS Hardware Type Definitions}\label{sec:PythonOSHardwareTypeDefinitions}
+
+%==============================================================================%
+\subsubsection{Class OperState} \label{class:OperState}
+
+A Python class represents the C API \texttt{PWR_OperState} structure as follows:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class OperState():
+    def __init__(self, cStateNum, pStateNum):
+        self.c_state_num = cStateNum
+        self.p_state_num = pStateNum
+    ...
+\end{lstlisting}\end{minipage}\end{center}
+
+To access the various data items of the \texttt{pwr.OperState} class instance,
+\texttt{myOpState}: 
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Get (read) access
+cState = myOpState.c_state_num
+pState = myOpState.p_state_num
+# Set (write) access
+myOpState.c_state_num = pwr.SleepState.SHALLOW
+myOpState.p_state_num = pwr.PerfState.FASTEST
+
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Application OS Interface Type Definitions}
+\label{sec:PythonApplicationOSInterfaceTypeDefinitions}
+
+%==============================================================================%
+\subsubsection{Enumeration Class RegionHint}\label{class:RegionHint}
+
+Please see page \pageref{type:RegionHint} for the C API description of this
+enumeration.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class RegionHint(_EnumerationClass):
+    pass
+RegionHint("DEFAULT")
+RegionHint("SERIAL")
+RegionHint("PARALLEL")
+RegionHint("COMPUTE")
+RegionHint("COMMUNICATE")
+RegionHint("IO")
+RegionHint("MEM_BOUND")
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+RegionHint("NUM_REGION_HINTS")
+RegionHint("INVALID", -1)
+RegionHint("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Enumeration Class RegionIntensity}\label{class:RegionIntensity}
+
+Please see page \pageref{type:RegionIntensity} for the C API description of this
+enumeration.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class RegionIntensity(_EnumerationClass):
+    pass
+RegionIntensity("HIGHEST")
+RegionIntensity("HIGH")
+RegionIntensity("MEDIUM")
+RegionIntensity("LOW")
+RegionIntensity("LOWEST")
+RegionIntensity("NONE")
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+RegionIntensity("NUM_REGION_INTENSITIES")
+RegionIntensity("INVALID", -1)
+RegionIntensity("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Enumeration Class SleepState}\label{class:SleepState}
+
+Please see page \pageref{type:SleepState} for the C API description of this
+enumeration.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class SleepState(_EnumerationClass):
+    pass
+SleepState("NO")
+SleepState("SHALLOW")
+SleepState("MEDIUM")
+SleepState("DEEP")
+SleepState("DEEPEST")
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+SleepState("NUM_SLEEP_STATES")
+SleepState("INVALID", -1)
+SleepState("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Enumeration Class PerfState}\label{class:PerfState}
+
+Please see page \pageref{type:PerfState} for the C API description of this
+enumeration.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+class PerfState(_EnumerationClass):
+    pass
+PerfState("FASTEST")
+PerfState("FAST")
+PerfState("MEDIUM")
+PerfState("SLOW")
+PerfState("SLOWEST")
+# Vendor implementations can add more entries here or look at  
+# the object-oriented "Enumerations Extension" description previously. 
+PerfState("NUM_PERF_STATES")
+PerfState("INVALID", -1)
+PerfState("NOT_SPECIFIED", -2)
+\end{lstlisting}\end{minipage}\end{center}
+
+

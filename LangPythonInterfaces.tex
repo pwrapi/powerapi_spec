@@ -1,0 +1,204 @@
+\section{Interfaces}\label{sec:PythonInterfaces}
+In general, this section defines various combinations of default attributes and
+the roles/interfaces that use them. Mostly, this information directly
+maps to the definitions in the C API specification. However, there are some
+methods described in this section that are discussed because of the
+differences between their C and Python implementations.
+
+\subsection{Operating System, Hardware Interface}
+\label{sec:PythonOperatingSystemInterface}
+
+These methods are related to \texttt{pwr.Obj} objects of type
+\texttt{pwr.ObjType.NODE}, so they are encapsulated in the \texttt{pwr.Obj}
+class.
+
+%==============================================================================%
+\subsubsection{Method StateTransitDelay} \label{meth:StateTransitDelay}
+
+This method returns the transition delay (\texttt{pwr.Time}) given the callers startState
+and endState input parameters. See section \ref{class:OperState} on page
+\pageref{class:OperState} for details on the \texttt{pwr.OperState} class): 
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+startState = myPwrObj.GetPerfState()
+startState = myPwrObj.perfstate         # Shortcut
+endState = pwr.OperState(pwr.SleepState.SHALLOW, pwr.PerfState.FASTEST)
+latencyPowerTime = myPwrObj.StateTransitDelay(startState, endState)
+#
+# Where:
+#   startState is a pwr.OperState state 
+#   endState   is a pwr.OperState state
+# Returns:
+#   latencyPowerTime is the pwr.Time latency
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+Note that the example above uses the method \texttt{GetPerfState} documented on page
+\pageref{meth:GetPerfState}.
+
+\subsection{Monitor and Control, Hardware Interface}\label{sec:PythonMonitorControlInterface}
+(No new methods described here)
+
+\subsection{Application, Operating System Interface}\label{sec:PythonApplicationInterface}
+
+%==============================================================================%
+\subsubsection{Method AppTuningHint} \label{meth:AppTuningHint}
+
+This method supplies power hints to a power object, using the hints enumerated by the
+\texttt{pwr.RegionHint} and \texttt{pwr.RegionIntensity} enumerations.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+pwrRegionHint = pwr.RegionHint.MEM_BOUND      # see enum RegionHint
+pwrRegionIntensity = pwr.RegionIntensity.LOW  # see enum RegionIntensity
+myPwrObj.AppTuningHint(pwrRegionHint, pwrRegionIntensity)
+#
+# Where:
+#   pwrRegionHint is a pwr.RegionHint type
+#   pwrRegionIntensity is a pwr.RegionIntensity level
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method SetSleepStateLimit} \label{meth:SetSleepStateLimit}
+
+This method sets the sleep-state limit from the enumeration for a power object.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+pwrSleepState = pwr.SleepState.NO  # see enum SleepState
+myPwrObj.SetSleepStateLimit(pwrSleepState)
+myPwrObj.sleepstate = pwrSleepState         # Shortcut
+#
+# Where:
+#   pwrSleepState is a pwr.SleepState type
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method WakeUpLatency} \label{meth:WakeUpLatency}
+
+This method gets the wake up latency for the sleep-state (\texttt{DEEPEST} in this example) to
+transition from, returning the (\texttt{pwr.Time}) latency of the transition.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+latencyPwrTime = myPwrObj.WakeUpLatency(pwr.SleepState.DEEPEST)
+#
+# Where:
+#   pwrSleepState is a pwr.SleepState type
+# Returns:
+#   latencyPwrTime a pwr.Time object representing the latency time
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method RecommendSleepState} \label{meth:RecommendSleepState}
+
+This method recommends a sleep-state for a power object, returning the deepest sleep-state
+(\texttt{pwr.SleepState}) to be used as a limit.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+pwrSleepState = myPwrObj.RecommendSleepState(latencyPwrTime) 
+#
+# Where:
+#   latencyPwrTime is a pwr.Time latency value
+# Returns:
+#   pwrSleepState is a pwr.SleepState recommendation type
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method SetPerfState} \label{meth:SetPerfState}
+
+This method requests that a power object performance level be set to a desired (\texttt{FASTEST}
+in this example) \texttt{pwr.PerfState} level.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrObj.SetPerfState(pwr.PerfState.FASTEST)
+myPwrObj.perfstate = pwr.PerfState.FASTEST     # Shortcut
+#
+# Where:
+#   pwrPerfState is the requested pwr.PerfState type
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetPerfState} \label{meth:GetPerfState}
+
+This method retrieves the performance level of a power object, returning the current
+performance state, \texttt{pwr.PerfState} object.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+pwrPerfState = myPwrObj.GetPerfState()
+pwrPerfState = myPwrObj.perfstate       # Shortcut
+#
+# Returns:
+#   pwrPerfState is the returned pwr.PerfState type
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetSleepState} \label{meth:GetSleepState}
+
+Similarly for retrieving the sleep-state of a power object, the \texttt{GetSleepState} method may be used.
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+pwrSleepState = myPwrObj.GetSleepState()
+pwrSleepState = myPwrObj.sleepstate       # Shortcut
+#
+# Returns:
+#   pwrSleepState is the returned pwr.SleepState type
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{User, Resource Manager
+Interface}\label{sec:PythonUserResourceManagerInterface}
+(No new methods described here)
+
+\subsection{Resource Manager, Operating System
+Interface}\label{sec:PythonResourceManagerOSInterface}
+(No new methods described here)
+
+\subsection{Resource Manager, Monitor and Control
+Interface}\label{sec:PythonResourceManagerMonitorControlInterface}
+(No new methods described here)
+
+\subsection{Administrator, Monitor and Control
+Interface}\label{sec:PythonAdministratorMonitorControlInterface}
+(No new methods described here)
+
+\subsection{HPCS Manager, Resource Manager
+Interface}\label{sec:PythonHPCSManagerInterface}
+(No new methods described here)
+
+\subsection{Accounting, Monitor and Control
+Interface}\label{sec:PythonAccountingMonitorControlInterface}
+(No new methods described here)
+
+\subsection{User Monitor and Control
+Interface}\label{sec:PythonUserMonitorControlInterface}
+(No new methods described here)
+
+\section{Conclusion}\label{sec:PythonConclusion}
+This concludes the Python-specific appendix to the Power API specification.
+

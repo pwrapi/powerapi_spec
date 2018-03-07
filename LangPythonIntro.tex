@@ -1,0 +1,72 @@
+\lstset{language=Python,keepspaces=true}
+Acceptance of the Python language is growing within the HPCS System and Power
+Management communities for its ease of scripting and its interoperability with
+existing other applications and frameworks.
+
+Python differs from C in many ways, including that it is an
+object-oriented language and implements garbage collection.  Because of these differences, Python
+implementations of the API have some fundamental differences with the way they
+are used. The functionality is the same as the C API specification, but the
+``style'' with which it is used is different in several respects, as described
+in the remainder of this appendix.
+
+\section{Introduction}\label{sec:PythonIntroduction}
+The general structure of the C API specification is followed throughout this
+appendix. Differences between the Python language bindings and the C API specification
+are clearly noted. The subsections of this Python specification mirror the C
+API specification and are similarly labeled, e.g. section
+\ref{sec:PythonOpaqueTypes} corresponds to \ref{sec:OpaqueTypes} in the C API.
+
+%==============================================================================%
+\subsubsection{Python PEP-8 Standard Compliance}
+\label{sec:PythonPEP8StandardCompliance:GrpCreate}
+
+In general this Python API specification follows the PEP8 guidelines
+regarding coding standards and naming conventions. These guidelines are
+followed unless they create undue differences with how the C API specification
+defines the names of various entities. An example of this is the C function:
+\texttt{PWR_CntxtGetEntryPoint()}. In this Python Specification,
+\texttt{GetEntryPoint()} is an instance method of the \texttt{pwr.Cntxt} class.
+PEP8 suggests method and function names start with a lower case letter, e.g.
+\texttt{getEntryPoint()}; but for consistency with the C API, this Python
+specification uses \texttt{GetEntryPoint()}. A brief summary of the
+PEP8 naming conventions follows:
+
+\begin{itemize}[noitemsep,nolistsep]
+\item{Packages and Modules have short names with all lowercase.}
+
+\item{Classes are named with ``CapWords'' names, also known as
+``CamelCase''. The first letter is capitalized.}
+
+\item{Exceptions follow the same rules as classes with the additional
+rule that ``Error'' be appended, such as ``CamelCaseError''.}
+
+\item{Global Variables, Method and Function names, and Instance Variables
+are named with ``lower_case_with_underscores'' or ``mixedCase'' (with the
+first character being lower case).}
+
+\item{Indentation and spacing are flexible within Python. See the PEP8 standard
+for an at-length discussion. C function parameters are aligned with the opening
+delimiter so Python methods and functions and their invocations are indented
+that way whenever possible.}
+
+\item{Non-Public or external variables are named with a
+``_leadingUnderscore''. Virtual methods for which a child class method is
+required may or may not have a leading underscore depending on whether that
+method or its derivatives is meant to be publicly exposed. This document only
+defines the public methods available via the ``opaque'' API}
+
+\item{Constants are named with ``ALL_CAPS''.}
+
+\item{Keyword collisions are handled by appending an underscore to the
+colliding keyword, such as ``open_''.}
+
+\item{Always use ``self'' as the first argument for instance methods, and use
+``cls'' as the first argument for class methods.}
+
+\end{itemize}
+
+\emph{Implementation Note: Throughout this appendix, module function and class
+method names begin with an upper-case character.}
+
+

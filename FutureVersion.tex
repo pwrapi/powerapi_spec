@@ -1,0 +1,54 @@
+
+
+The following topics are either currently in active discussion or are planned to be addressed in future versions of the specification.
+In some cases it will be necessary to solicit additional feedback from the community to ensure we properly address the issue in future versions.
+
+\begin{itemize}[noitemsep,nolistsep]
+
+\item{\textbf{Coexistence of Implementations} - One of the driving questions for this future work is - how does one implementation interface with another? It is possible, even likely that an implementor will focus on implementing a portion or portions of the specification. This begs the question of how does implementation A interact with implementation B? Further, what role does the specification play in driving this interaction? We intend to work closely with the community to sort out this issue and document the appropriate guidance in the next version of the specification.
+}
+\item{\textbf{Language Bindings} - Some roles, system administrator for example, more commonly interface with the platform through shells, shell scripting or other interpretive languages like Perl or Python. We will investigate adding some or all of these capabilities, via specification and possibly prototypes, in future versions of the standard.
+}
+    \begin{itemize}
+        \item{The next version of the specification will include a complete Python specification of all existing functions modified appropriately for the Python language}
+    \end{itemize}
+
+\item{\textbf{User Guide} - The addition of a user guide could provide additional useful information to both users and implementors. The addition of a users guide will be considered and if realized will accompany subsequent releases of the specification.
+}
+\item{\textbf{Hypothetical System Example} - We are considering creating a hypothetical system example to use to discuss and clarify concepts and higher level use cases. This will likely be included in the User Guide.
+}
+\item{\textbf{Required versus Optional, or Quality of Implementation} - We plan to clarify and document more precisely what portions of the specification are required to be implemented, what portions are optional and the definition of a quality implementation. This topic is complicated by the fact that implementors are free to implement portions of the specification. 
+}
+    \begin{itemize}
+        \item{Some progress has been made on this topic for version 1.1 but additional work is required.}
+    \end{itemize}
+
+\item{\textbf{Policies} - Security policies, priority of operations and privileges need to be further vetted and specified when appropriate. This topic has a large amount of intersection with the \textit{Coexistence of Implementations} topic and will be considered jointly.
+}
+\item{\textbf{Unit Tests} - Development of a unit test infrastructure is under consideration, possibly to be associated with our prototype which will be released open source at a later date. Unit tests might also be a way for the implementation community to assure interaction between implementations of portions of the specification that will be required to work together.
+}
+\item{\textbf{User Supplied Functions} - We intend to investigate adding the ability for a user to supply a function for the purposes of generating a statistic, for example.
+}
+\item{\textbf{Multiple Platform Support} - Currently the specification only considers operation on a single platform. There is nothing preventing supporting multiple platforms and exposing multiple platforms in a single context in future versions. This will be considered for the next release in conjunction with the Coexistence of Implementation issue.
+}
+\item{\textbf{Generation Counter} - We intend to consider the addition of a generation counter capability to be used in conjunction with counters that have the potential for roll over. The generation counter could be used to inform the user that this has taken place. This concept likely has additional utility which is what will be explored for future releases of the specification. Target: 1.X - Implementation should handle overflow internally
+}
+\item{\textbf{Time Conversion/Overflow} - Time conversion convenience functions are being considered to convert between \texttt{PWR_Time} values and POSIX-compatible time representations. Included in this will be methods of detecting overflow during time value arithmetic.
+}
+\item{\textbf{Context Refresh} - We are considering adding the ability to refresh a context int he case of a long lived context such as one that is used by a persistent daemon. Yet to be resolved is what happens to existing pointers, more specifically what happens when the user has a pointer to an object that no longer exists after the refresh, or if this can happen. 
+}
+\item{\textbf{Enhanced Support for ACPI 5.0} - Collaborative Processor Performance Control and Continuous Performance Control are currently not supported. Support will require new attributes and some function calls to allow for the flexible mechanisms provided in the ACPI 5.0 specification to allow expression of desired performance on a sliding, abstract unit-less scale. ACPI 5.0 also supports gathering statistics about the delivery of given performance values and the time spent in certain states, which we intend to address. We anticipate adding this support alongside the P-state and C-state functionality already in the Power API in a future version of the specification. 
+}
+\item{\textbf{User/Resource Manager Interfaces} - Work needs to be done in this area but is best accomplished in collaboration with resource manager, work load manager experts. We hope to include standard interfaces for the user to query this system in future versions of the specification. 
+}
+    \begin{itemize}
+        \item{Work has begun to develop general report and information mining capabilities}
+    \end{itemize}
+
+\item{\textbf{HPCS Manager to Resource Manager Interface} - This interface clearly needs some work. Again it seems that this would benefit greatly from collaborative efforts.
+}
+    \begin{itemize}
+        \item{Work has begun to develop general report and information mining capabilities}
+    \end{itemize}
+
+\end{itemize}

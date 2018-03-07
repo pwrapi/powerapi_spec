@@ -1,0 +1,273 @@
+\section{High Level (Common) Methods}\label{sec:PythonHighLevelCommonMethods}
+\subsection{Report Methods}\label{sec:PythonReportMethods}
+
+%==============================================================================%
+\subsubsection{Method pwr.Cntxt.GetReportByID} \label{meth:GetReportByID}
+
+Please see the C API specification (section \ref{func:GetReportByID} on page
+\pageref{func:GetReportByID}) for a verbose description of the \texttt{GetReportByID()} method. Also, please see
+\ref{class:ID} on page \pageref{class:ID} and/or vendor implementation specific
+documentation for valid IDs. To collect statistics for an \texttt{idStr} and \texttt{idType} combination, the \texttt{GetReportByID()} method may be used. 
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+statValue, timePeriod = myPwrCntxt.GetReportByID(idStr, idType, attrName,
+                                                 pwrAttrStat, pwrTimePeriod)
+#
+# Where:
+#   idstr is a string ID for the report to be generated.
+#   idType is a pwr.ID type used to interpret the idstr ID
+#   attrName is a pwr.AttrName type
+#   pwrAttrStat is a pwr.AttrStat object
+#   pwrTimePeriod is a pwr.TimePeriod object
+# Returns:
+#   statValue is the requested statistic
+#   timePeriod is the pwr.TimePeriod of the statistic
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are: 
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+#
+\end{lstlisting}\end{minipage}\end{center}
+
+
+%\subsubsection{Method pwr.Cntxt.GetJobInfo} \label{meth:GetJobInfo}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method retrieves attributes, nodes, and timing(s) for a given job and/or run ID. The arguments \texttt{jobID} and \texttt{runID} are keyword arguments, and at least one of \texttt{jobID} or \texttt{runID} must be defined.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%jobAttr, phys2Nid, jobGrp, jobTP = myPwrCntxt.GetJobInfo(jobID=None, runID=None)
+%#
+%# Where:
+%#   jobID is a string ID for the job (i.e., job ID)
+%#   runID is an integer run ID.
+%# Returns:
+%#   jobAttr is a named tuple of job attributes (job ID, run ID(s), and 
+%#       user ID)
+%#   physical2NidMap is a dictionary that maps physical component names in 
+%#       the job to Node IDs (nids)
+%#   jobNodesGrp is a group of comprised of the pwr.ObjType.NODE objects for the
+%#       job
+%#   timePeriod is a list of pwr.TimePeriod objects for the job. In the case of
+%#       a suspended/resumed job, the list has length greater than one.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.EMPTY
+%#   pwr.ReturnCode.BAD_VALUE
+%#
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%\subsubsection{Method pwr.Cntxt.GetJobsByUser} \label{meth:GetJobsByUser}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method of the \texttt{pwr.Cntxt} class gets a list of (job ID, run ID) tuples for a given userId (uid) and time period.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%jobList = myPwrCntxt.GetJobsByUser(userId, pwrTimePeriod=None)
+%#
+%# Where:
+%#   userId is a user ID (integer uid)
+%#   pwrTimePeriod is a pwr.TimePeriod object to scope the query. If not supplied,
+%#       the entire job history is searched.
+%# Returns:
+%#   A list of (job ID, apid) tuples matching the user ID userId and the time
+%#       period pwrTimePeriod (if supplied).
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%#
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%\subsubsection{Method pwr.Cntxt.GetJobsByTime} \label{meth:GetJobsByTime}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method of the \texttt{pwr.Cntxt} class gets a list of (job ID, runID) tuples for a given (optional) time period.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%jobList = myPwrCntxt.GetJobsByTime(pwrTimePeriod=None)
+%#
+%# Where:
+%#   pwrTimePeriod is a pwr.TimePeriod object to scope the query. If not supplied,
+%#       the entire job history is searched.
+%# Returns:
+%#   A list of (job ID, apid) tuples matching the time period pwrTimePeriod 
+%#       (if supplied).
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%\subsubsection{Method pwr.Obj.WriteTimeSeriesCSV} \label{meth:objWriteTimeSeriesCSV}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method of the \texttt{pwr.Obj} class writes a time series for an object to a file as comma-separated values (CSV). The column order of the CSV file is: timestamp, object name, attribute name, value.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%rc = myPwrObj.WriteTimeSeriesCSV(pwrAttr, pwrTimePeriod, filename)
+%#
+%# Where:
+%#   pwrAttr is a Power API attribute (e.g., pwr.AttrName.POWER, 
+%#       pwr.AttrName.ENERGY)
+%#   pwrTimePeriod is a list of one or more non-overlapping pwr.TimePeriod 
+%#       objects under which to generate a time series. 
+%#   filename is the path and filename to which to write the comma-separated 
+%#       values. A filename of `stdout' is treated as a special, using 
+%#       sys.stdout to print to stdout.
+%# Returns:
+%#   A return code, pwr.ReturnCode.SUCCESS for success.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%#
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%
+%\subsubsection{Method pwr.Grp.WriteTimeSeriesCSV} \label{meth:grpWriteTimeSeriesCSV}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method of the \texttt{pwr.Grp} class writes a time series for each object in a group to a file as comma-separated values (CSV). The column order of the CSV file is: timestamp, object name, attribute name, value.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%rc = myPwrGrp.WriteTimeSeriesCSV(pwrAttr, pwrTimePeriod, filename)
+%#
+%# Where:
+%#   pwrAttr is a Power API attribute (e.g., pwr.AttrName.POWER, 
+%#       pwr.AttrName.ENERGY)
+%#   pwrTimePeriod is a list of one or more non-overlapping pwr.TimePeriod 
+%#       objects under which to generate a time series. 
+%#   filename is the path and filename to which to write the comma-separated 
+%#       values. A filename of `stdout' is treated as a special, using 
+%#       sys.stdout to print to stdout.
+%# Returns:
+%#   A return code, pwr.ReturnCode.SUCCESS for success.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%#   pwr.ReturnCode.OP_NOT_ATTEMPTED
+%#
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%\subsubsection{Method pwr.Grp.WriteAggregateTimeSeriesCSV} \label{meth:WriteAggregateTimeSeriesCSV}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method of the \texttt{pwr.Grp} class writes an aggregated time series for a group of objects to a file as comma-separated values (CSV). The column order of the CSV file is: timestamp, attribute name, value.  This call is useful for getting a time series of a total over a group (e.g., total power over a group of nodes).
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%rc = myPwrGrp.WriteAggregateTimeSeriesCSV(pwrAttr, pwrTimePeriod, filename)
+%#
+%# Where:
+%#   pwrAttr is a Power API attribute (e.g., pwr.AttrName.POWER, 
+%#       pwr.AttrName.ENERGY)
+%#   pwrTimePeriod is a list of one or more non-overlapping pwr.TimePeriod 
+%#       objects under which to generate a time series. 
+%#   filename is the path and filename to which to write the comma-separated 
+%#       values. A filename of `stdout' is treated as a special, using 
+%#       sys.stdout to print to stdout.
+%# Returns:
+%#   A return code, pwr.ReturnCode.SUCCESS for success.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%#   pwr.ReturnCode.OP_NOT_ATTEMPTED
+%#
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%%==============================================================================%
+%\subsection{Convenience Methods}\label{sec:PythonConvenienceMethods}
+%
+%\subsubsection{Method pwr.Cntxt.GrpCreateByJobID} \label{meth:GrpCreateByJobID}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%Given a Job ID \texttt{jobIDStr}, this method of the \texttt{pwr.Cntxt} class returns a group of objects (of type \texttt{objType}) associated with the job.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%jobGroup = myPwrCntxt.GrpCreateByJobID(jobIDStr, objType)
+%#
+%# Where:
+%#   jobIDStr is a string ID for the job (i.e., job ID)
+%#   objType is a Power API object type (e.g., pwr.ObjType.NODE)
+%#      
+%# Returns:
+%#   A group of objects of type objType associated with job ID jobIDStr.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%#
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%\subsubsection{Method pwr.Cntxt.GrpCreateByRunID} \label{meth:GrpCreateByRunID}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%Given a Run ID \texttt{runID}, this method of the \texttt{pwr.Cntxt} class returns a group of objects (of type \texttt{objType}) associated with the run.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%runGroup = myPwrCntxt.GrpCreateByRunID(runID, objType)
+%#
+%# Where:
+%#   runID is an integer ID for the run (i.e., run ID)
+%#   objType is a Power API object type (e.g., pwr.ObjType.NODE)
+%#      
+%# Returns:
+%#   A group of objects of type objType associated with run ID runID.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%\subsubsection{Method pwr.Cntxt.GrpCreateByName} \label{meth:GrpCreateByName}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method of the \texttt{pwr.Cntxt} class creates a group given a tuple of object/component physical names. If bad or non-existent names are given, they are silently ignored.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%physNameGroup = myPwrCntxt.GrpCreateByName(nameTuple, objType)
+%#
+%# Where:
+%#   nameTuple is a a tuple of string object/component physical names.
+%#   objType is a Power API object type (e.g., pwr.ObjType.NODE)
+%#      
+%# Returns:
+%#   A group of objects derived from nameTuple.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%\end{lstlisting}\end{minipage}\end{center}
+%
+%\subsubsection{Method pwr.Cntxt.GrpCreateByNidlist} \label{meth:GrpCreateByNidlist}
+%\emph{NOTE: this method is proposed by Cray Inc. for inclusion into the specification.  The text represents the APM4 implementation and may be altered pursuant to discussion/review}
+%
+%This method of the \texttt{pwr.Cntxt} class creates a group given a tuple of node IDs (nids). If bad or non-existent nids are given, they are silently ignored.
+%
+%\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+%nidlistGroup = myPwrCntxt.GrpCreateByNidlist(nidTuple, objType)
+%#
+%# Where:
+%#   nidTuple is a a tuple of integer node IDs (nids).
+%#   objType is a Power API object type (e.g., pwr.ObjType.NODE)
+%#      
+%# Returns:
+%#   A group of objects derived from nidTuple.
+%# This method raises a pwr.PwrError exception when something goes wrong.
+%# The possible exception errors are: 
+%#   pwr.ReturnCode.FAILURE
+%#   pwr.ReturnCode.NOT_IMPLEMENTED
+%#   pwr.ReturnCode.BAD_VALUE
+%\end{lstlisting}\end{minipage}\end{center}

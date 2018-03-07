@@ -1,0 +1,12 @@
+1.  \printindex starts a new page, as does \chapter{index}
+
+	Leaving out \chapter{index} removes the index from the table of contents,
+	even when trying to force the issue with
+	 \addcontentsline{toc}{chapter}{Index}	
+
+	Both imakeidx and idxlayout packages break the compile.
+
+
+2.  Internal navigation is incomplete.
+
+3.  Missing list of tables and list of features.

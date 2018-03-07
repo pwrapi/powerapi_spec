@@ -1,0 +1,62 @@
+
+This chapter includes the specifications for all of the Role/System pair interfaces depicted in figure~\ref{fig:UCDTopLevel} on page~\pageref{fig:UCDTopLevel}.
+Each interface section first outlines the purpose the interface serves.
+Core functionality for each interface is exposed through the attribute functions (see section \ref{sec:Attributes}).
+Each interface section includes a table of the supported attributes for that interface. 
+The table contains the \textit{suggested} attributes that the implementation should support for each interface. 
+The implementation can choose to implement additional, some subset, or none of the attributes listed for that interface.
+As previously mentioned, the implementation must implement all attribute functions whether individual attributes are supported or not.
+If a particular attribute is not supported for that interface the implementation should return \texttt{PWR_RET_NOT_IMPLEMENTED}.
+
+In addition to the attribute functions, other Core (Common) functions are included in this specification.
+Each individual interface section will enumerate the Core (Common) functions that the specification suggests are applicable for that interface (see chapter \ref{chap:Common} for details regarding Core (Common) functions).
+Again, the implementation must implement these functions but may choose not to support them for a particular interface.
+
+Each section also includes the High-Level (Common) functions that are applicable to that section (see chapter \ref{chap:HighLevel} for details regarding High-Level (Common) functions).
+These functions are functions that are applicable to more than one Role/System pair interface.
+
+Finally, individual interface sections may also contain interface specific functions.
+These are functions that, at the time of their addition to the specification, are specific to one Role/System pair. 
+This does not indicate that the function cannot be supported by an implementation for other Role/System pairs, only that the authors did not recognize a use for other interfaces at the time of addition to the specification.
+
+
+
+\section{Operating System, Hardware Interface}\label{sec:OSHW}
+\input{OSHW}
+
+\newpage
+\section{Monitor and Control, Hardware Interface}\label{sec:MCHW}
+\input{MCHW}
+
+\newpage
+\section{Application, Operating System Interface}\label{sec:AppOS}
+\input{AppOS}
+
+\newpage
+\section{User, Resource Manager Interface}\label{sec:UserRM}
+\input{UserRM}
+
+\newpage
+\section{Resource Manager, Operating System Interface}\label{sec:RMOS}
+\input{RMOS}
+
+\newpage
+\section{Resource Manager, Monitor and Control Interface}\label{sec:RMMC}
+\input{RMMC}
+
+\newpage
+\section{Administrator, Monitor and Control Interface}\label{sec:AdminMC}
+\input{AdminMC}
+
+\newpage
+\section{HPCS Manager, Resource Manager Interface}\label{sec:MgrRM}
+\input{MgrRM}
+
+\newpage
+\section{Accounting, Monitor and Control Interface}\label{sec:AccMC}
+\input{AccMC}
+
+\newpage
+\section{User, Monitor and Control Interface}\label{sec:UserMC}
+\input{UserMC}
+

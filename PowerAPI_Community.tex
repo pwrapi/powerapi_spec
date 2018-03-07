@@ -1,0 +1,689 @@
+\documentclass[12pt]{report}
+\usepackage{caption}
+\usepackage{longtable,tabu}
+\usepackage{enumitem}
+\usepackage{hyperref}			
+\usepackage{graphicx}
+\usepackage{marginnote}
+\usepackage[nohyphen]{underscore}
+%\usepackage{imakeidx}
+\usepackage{makeidx}
+\usepackage{color}
+\usepackage[toc,page]{appendix}
+\usepackage{listings}
+\lstset{ %
+	language=C,                		% choose the language of the code
+	columns= [l]fullflexible,
+	basicstyle=\ttfamily\footnotesize,      % the size of the fonts that are used for the code
+	commentstyle=\color{blue},      	% format of commentstyle 
+	numberstyle=\footnotesize,      	% the size of the fonts that are used for the line-numbers
+	stepnumber=1,                   	% the s	tep between two line-numbers. If it is 1 each line will be numbered
+	numbersep=5pt,                  	% how far the line-numbers are from the code
+	backgroundcolor=\color{white},  	% choose the background color. You must add \usepackage{color}
+	keepspaces=false,
+	showspaces=false,               	% show spaces adding particular underscores
+	showstringspaces=false,         	% underline spaces within strings
+	showtabs=false,                 	% show tabs within strings adding particular underscores
+	frame=single,           		% adds a frame around the code
+	tabsize=2,          			% sets default tabsize to 2 spaces
+	captionpos=b,           		% sets the caption-position to bottom
+	breaklines=true,        		% sets automatic line breaking
+	breakatwhitespace=false,    		% sets if automatic breaks should only happen at whitespace
+	escapeinside={\%*}{*)}          	% if you want to add a comment within your code
+}
+\makeindex
+% Breaks index assembly
+%\makeindex[intoc]
+% Breaks index assembly
+%\usepackage[totoc]{idxlayout}			% Force index into table of contents.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Function prototype macros.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Function prototype descriptions are now completely parameterized.  An example for PWR_ObjGetName():
+%
+%        \begin{prototype}{ObjGetName}
+%        \longdescription{
+%                Copies the name of the specified object into the user provided buffer.
+%                See page \pageref{func:CntxtGetObjByName} to get the object based on the
+%                unique name using \CntxtGetObjByName.
+%        }
+%        \returntype{int}
+%
+%        \parameter{\PWR{Obj} object}    {Input} {The object that the user wishes to determine the name of.}
+%        \parameter{char* dest}          {Input} {The address of the user provided buffer.}
+%        \parameter{size_t len}          {Input} {The length of the user provided buffer.}
+%
+%        \returnval{\PWR{RET_SUCCESS}}           {Upon SUCCESS, the buffer will contain the name of the object, the string will include a terminating null byte.}
+%        \returnval{\PWR{RET_WARN_TRUNC}}        {Call succeeded, but the length of object name was longer than the provided buffer and the name was truncated.}
+%        \returnval{\PWR{RET_FAILURE}}           {Upon FAILURE.}
+%        \end{prototype}
+%
+% This approach allows all of the formatting to be contained in a single 
+% set of functions, rather than hard-coded in each of the function prototype
+% subsections.  Thanks to Victor Eijkhout and Gilles Castel for coding 
+% assistance.  --BLR
+
+\def\PWR#1{\texttt{PWR\_{#1}}}%                         % Adds PWR_ and texttt formatting.
+\def\null{}
+\def\undecoratedname{}                                  % Undecorated function name, e.g., ObjGetName (not PWR_ObjGetName)
+\def\longdesc{}                                         % Paragraph describing function details.
+\def\returns{}                                          % Return type of the function
+\def\params{}                                           % Table-formatted accumulator for function parameters and descriptions.
+\def\retvals{}                                          % Table-formatted accumulator for available return values.
+\def\signatureparams{}                                  % Comma-formatted list of parameter types and names.
+\def\parameternote{}					% Text to be hung in the right margin (at the moment)
+%\reversemarginpar					% Make the left margin the default for margin notes.
+
+
+\newenvironment{prototype}[1]{
+        % This stanza is placed at the beginning of the environment.
+        \def\undecoratedname{#1}
+}{
+        % This stanza is placed at the end of the environment.
+
+	% Subsection Header
+        \subsubsection{Function Prototype for \PWR{\undecoratedname}()}\label{func:\undecoratedname}
+	\index{\undecoratedname@\PWR{\undecoratedname} \textit{(function)}}
+
+	% Long description of the function prototype.
+	\longdesc
+
+        \vspace{0.1in}
+
+	% Function signature
+	\begin{center}
+		\begin{tabular}{| p{13.2cm} |}
+			\hline
+			\noindent\small{\texttt{\returns\ \PWR{\undecoratedname}(\signatureparams)}}\\
+			\hline
+		\end{tabular}
+	\end{center}
+
+	% Table of function parameters
+	\ifx \params\null
+		%
+	\else
+		\begin{center}
+			\begin{tabular}{ | p{0.9cm} p{4.8cm} | p{6.7cm} |}
+				\hline
+				\multicolumn{2}{|l|}{\textbf{Arguments}} & \textbf{Description}\marginnote{\scriptsize\parameternote}\\
+				\hline
+				\params%
+				\hline
+			\end{tabular}
+		\end{center}
+	\fi	
+
+
+	% Table of return values
+	\ifx \retvals\null
+		%
+	\else
+		\begin{center}
+			\begin{tabular}{ | p{6.1cm} | p{6.8cm} |}
+				\hline
+				\textbf{Return Code(s)} & \textbf{Description} \\
+				\hline
+				\retvals%
+				\hline
+			\end{tabular}
+		\end{center}
+	\fi
+}
+
+% Parameter accumulator
+\newcommand\parameter[3]{
+	
+	% Puts parameters into table format.
+	\edef\params{%
+		\unexpanded\expandafter{\params}%
+		\unexpanded{#2 & \texttt{#1} & #3\\}%
+	}%  
+
+	% Puts parameters into comma-separated signature format.
+	\ifx\signatureparams\empty
+		\edef\signatureparams{%
+			\unexpanded\expandafter{\signatureparams}%
+			\unexpanded{#1}%
+		}
+	\else
+		\edef\signatureparams{%
+			\unexpanded\expandafter{\signatureparams}%
+			, \unexpanded{#1}%
+		}
+	\fi
+}
+
+% Stores the long description of the function prototype.
+\def\longdescription#1{
+        \def\longdesc{#1}
+}
+
+% Parameter marginal note.
+\def\pnote#1{
+	\def\parameternote{#1}
+}
+
+% Return value accumulator.
+\newcommand\returnval[2]{
+        \edef\retvals{%
+                \unexpanded\expandafter{\retvals}%
+                \unexpanded{\texttt{#1} & #2\\}%
+        }%
+}
+
+% Stores the return type of the function prototype.
+\def\returntype#1{
+        \def\returns{#1}
+}
+
+% Allow global modification of how we represent Input and Output variables.
+\def\pInput{\tiny{\textbf{IN}}}
+\def\pOutput{\tiny{\textbf{OUT}}}
+\def\pInputOutput{\tiny{\textbf{IN/OUT}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Attribute (and metadata) table macros.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% At this writing, each particular attribute keeps its get/set characteristics
+% across all interfaces.  
+
+\def\attributetablename{}
+\def\attributetablelabel{}
+\def\attriblist{}
+
+\newenvironment{attributetable}[2]{
+        % This stanza is placed at the beginning of the environment.
+        \def\attributetablename{#1}
+	\def\attributetablelabel{#2}
+}{
+        % This stanza is placed at the end of the environment.
+	\begin{longtable}{ | p{6.3cm} | p{6.6cm} |}
+	\caption{\attributetablename}\label{\attributetablelabel}\\
+	\hline											%%			
+	\textbf{Attribute, Get/Set, Type}& \textbf{Description}\\  				%% First header.
+	\hline											%%
+	\endfirsthead					
+	\multicolumn{2}{r}{{ \small{\tablename\ \thetable{} -- continued from previous page}}}\\%% Remaining headers.
+	\hline											%%
+	\textbf{Attribute, Get/Set, Type} & \textbf{Description}\\ 				%% First header.
+	\hline											%%
+	\endhead
+	\hline											%% 
+	\multicolumn{2}{r}{\small{{Continued on next page}}} \\					%% All but last footer.
+	\endfoot
+	\hline											%% Last footer.
+	\endlastfoot										
+	\attriblist
+	\hline
+	\end{longtable}
+}
+\def\attribute#1#2#3#4{
+	\edef\attriblist{%
+		\unexpanded\expandafter{\attriblist}%
+		\unexpanded{ \hline #1 \newline .\quad #2 \newline .\quad #3 & #4 \index{ATTR\_#1@\PWR{ATTR\_\uppercase{#1}}\textit{(attribute)}}\\ }%
+	}%
+}
+
+% This is a near-duplicate of the attribute table above.
+% We'll use the same variables.
+\newenvironment{metadatatable}[2]{								
+        % This stanza is placed at the beginning of the environment.				
+        \def\attributetablename{#1}
+	\def\attributetablelabel{#2}
+}{
+        % This stanza is placed at the end of the environment.
+	\begin{longtable}{ | p{6.3cm} | p{6.6cm} |}
+	\caption{\attributetablename}\label{\attributetablelabel}\\
+	\hline											%%			
+	\textbf{Metadata, Get/Set, Type}& \textbf{Description}\\  				%% First header.
+	\hline											%%
+	\endfirsthead					
+	\multicolumn{2}{r}{{ \small{\tablename\ \thetable{} -- continued from previous page}}}\\%% Remaining headers.
+	\hline											%%
+	\textbf{Metadata, Get/Set, Type} & \textbf{Description}\\ 				%% First header.
+	\hline											%%
+	\endhead
+	\hline											%% 
+	\multicolumn{2}{r}{\small{{Continued on next page}}} \\					%% All but last footer.
+	\endfoot
+	\hline											%% Last footer.
+	\endlastfoot										
+	\attriblist
+	\hline
+	\end{longtable}
+}
+\def\metadata#1#2#3#4{
+	\edef\attriblist{%
+		\unexpanded\expandafter{\attriblist}%
+		\unexpanded{ \hline #1 \newline .\quad #2 \newline .\quad #3 & #4 \index{MD\_#1@\PWR{MD\_\uppercase{#1}}\textit{(metadata)}}\\ }%
+	}%
+}
+
+\def\ATTR#1{ATTR\_{\uppercase{#1}}}%	% convert foo into ATTR_FOO
+\def\MD#1{MD\_{\uppercase{#1}}}%	% convert bar into MD_BAR
+\def\aG{Get}
+\def\aS{Set}
+\def\aGS{Get/Set}
+\def\uint{\small{\texttt{uint64\_t}}}
+\def\dbl{\small{\texttt{double}}}
+\def\SaA{\small{Same type as attribute}}
+\def\ptrchar{\texttt{char *}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Environments for lists of #defines, typedefs, enums and structs.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% These were originally kept in a listings environment, but that prevents 
+% additional markup such as labels and index entries.
+
+% Accumulator for typesdefs and defines
+\def\typedefsanddefines{}
+
+\newenvironment{typedefs}{
+}{
+	\begin{center}
+		%\begin{tabular}{| p{3cm} p{3cm} p{6cm} |}
+		\begin{tabular}{| lll |}
+			\hline
+			\typedefsanddefines
+			\hline
+		\end{tabular}
+	\end{center}
+}
+
+
+\newcommand\typedef[2]{
+	\edef\typedefsanddefines{%
+		\unexpanded\expandafter{\typedefsanddefines}%
+		\unexpanded{%
+			\texttt{typedef} &% 
+			\texttt{#1} &%
+			\PWR{#2}\label{typedef:#2} \index{#2@\PWR{#2} \textit{(typedef)}}\\}%
+	}%
+}%
+
+\newcommand\pounddefine[2]{
+	\edef\typedefsanddefines{%
+		\unexpanded\expandafter{\typedefsanddefines}%
+		\unexpanded{%
+			\texttt{\#define} &%
+			\PWR{#1} &%
+			\texttt{#2}\label{define:#2} \index{#2@\PWR{#2} \textit{(\#define)}}\\}%
+	}%
+}%
+
+% #defines that have underscores in them have to be treated individually.
+\newcommand\pounddefineMAJORVERSION{%
+	\edef\typedefsanddefines{%
+		\unexpanded\expandafter{\typedefsanddefines}%
+		\unexpanded{%
+			\texttt{\#define} &%
+			\PWR{MAJOR\_VERSION} &%
+			\texttt{2}\label{define:MAJORVERSION} \index{MAJOR\_VERSION@\PWR{MAJOR\_VERSION} \textit{(\#define)}}\\}%
+	}%
+}%
+	
+\newcommand\pounddefineMINORVERSION{%
+	\edef\typedefsanddefines{%
+		\unexpanded\expandafter{\typedefsanddefines}%
+		\unexpanded{%
+			\texttt{\#define} &%
+			\PWR{MINOR\_VERSION} &%
+			\texttt{0}\label{define:MINORVERSION} \index{MINOR\_VERSION@\PWR{MINOR\_VERSION} \textit{(\#define)}}\\}%
+	}%
+}%
+
+\newcommand\pounddefineMAXSTRINGLEN{%
+	\edef\typedefsanddefines{%
+		\unexpanded\expandafter{\typedefsanddefines}%
+		\unexpanded{%
+			\texttt{\#define} &%
+			\PWR{MAX\_STRING\_LEN} &%
+			\textit{vendor-defined}\label{define:MAXSTRINGLEN} \index{MAX\_STRING\_LEN@\PWR{MAX\_STRING\_LEN} \textit{(\#define)}}\\}%
+	}%
+}%
+
+\newcommand\pounddefineCNTXTDEFAULT{%
+	\edef\typedefsanddefines{%
+		\unexpanded\expandafter{\typedefsanddefines}%
+		\unexpanded{%
+			\texttt{\#define} &%
+			\PWR{CNTXT\_DEFAULT} &%
+			\textit{0}\label{define:CNTXTDEFAULT} \index{CNTXT\_DEFAULT2@\PWR{CNTXT\_DEFAULT} \textit{(\#define)}}\\}%
+	}%
+}%
+
+
+\newcommand\pounddefineCNTXTVENDOR{%
+	\edef\typedefsanddefines{%
+		\unexpanded\expandafter{\typedefsanddefines}%
+		\unexpanded{%
+			\texttt{\#define} &%
+			\PWR{CNTXT\_VENDOR} &%
+			\textit{0}\label{define:CNTXTVENDOR} \index{CNTXT\_VENDOR@\PWR{CNTXT\_VENDOR} \textit{(\#define)}}\\}%
+	}%
+}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Label, Reference and Index macros
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% References will be automatically hyperlinked.  
+\newcommand\funcref[1]{\hyperref[func:#1]{\PWR{#1}}\texttt{()}\marginnote{\scriptsize{p.~\pageref{func:#1}}}}
+\newcommand\funcrefx[1]{\hyperref[func:#1]{\PWR{#1}}}
+
+\newcommand\typeref[1]{\hyperref[type:#1]{\PWR{#1}}\marginnote{\scriptsize{p.~\pageref{type:#1}}}}
+\newcommand\typerefx[1]{\hyperref[type:#1]{\PWR{#1}}}
+
+\newcommand\defref[1]{\hyperref[define:#1]{\PWR{#1}}\marginnote{\scriptsize{p.~\pageref{define:#1}}}}
+\newcommand\defrefx[1]{\hyperref[define:#1]{\PWR{#1}}}
+
+\newcommand\enumref[1]{\hyperref[enum:#1]{\PWR{#1}}\marginnote{\scriptsize{p.~\pageref{enum:#1}}}}
+\newcommand\enumrefx[1]{\hyperref[enum:#1]{\PWR{#1}}}
+
+\newcommand\structref[1]{\hyperref[struct:#1]{\PWR{#1}}\marginnote{\scriptsize{p.~\pageref{struct:#1}}}}
+\newcommand\structrefx[1]{\hyperref[struct:#1]{\PWR{#1}}}
+
+% #defines with underscores (beyond PWR_) can't be used as labels or references with 
+% the underscore package.  These are the special cases.
+\newcommand\MAJORVERSIONref{\hyperref[define:MAJORVERSION]{\texttt{PWR\_MAJOR\_VERSION}\marginnote{\scriptsize{p.~\pageref{define:MAJORVERSION}}}}}
+\newcommand\MAJORVERSIONrefx{\hyperref[define:MAJORVERSION]{\PWR{MAJOR\_VERSION}}}
+
+\newcommand\MINORVERSIONref{\hyperref[define:MINORVERSION]{\texttt{PWR\_MINOR\_VERSION}\marginnote{\scriptsize{p.~\pageref{define:MINORVERSION}}}}}
+\newcommand\MINORVERSIONrefx{\hyperref[define:MINORVERSION]{\PWR{MINOR\_VERSION}}}
+
+\newcommand\MAXSTRINGLENref{\hyperref[define:MAXSTRINGLEN]{\texttt{PWR\_MINOR\_VERSION}\marginnote{\scriptsize{p.~\pageref{define:MAXSTRINGLEN}}}}}
+\newcommand\MAXSTRINGLENrefx{\hyperref[define:MAXSTRINGLEN]{\PWR{MAX\_STRING\_LEN}}}
+
+\newcommand\CNTXTDEFAULTref{\hyperref[define:CNTXTDEFAULT]{\texttt{PWR\_CNTXT\_DEFAULT}\marginnote{\scriptsize{p.~\pageref{define:CNTXTDEFAULT}}}}}
+\newcommand\CNTXTDEFAULTrefx{\hyperref[define:CNTXDEFAULT]{\PWR{CNTXT\_DEFAULT}}}
+
+\newcommand\CNTXTVENDORref{\hyperref[define:CNTXTVENDOR]{\texttt{PWR\_CNTXT\_VENDOR}\marginnote{\scriptsize{p.~\pageref{define:CNTXTVENDOR}}}}}
+\newcommand\CNTXTVENDORrefx{\hyperref[define:CNTXTVENDOR]{\PWR{CNTXT\_VENDOR}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% The big list of attributes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The remainder of the macros are for text repeated across several tables.
+\newcommand{\aPstateDesc}{%
+	\attribute{PstateDesc}		{ \aGS }{ \uint }{ The current P-state for the object specified (typically processors but for use with other component types when applicable).  }%
+}
+\newcommand{\aCstateDesc}{%		
+	\attribute{CstateDesc}		{ \aGS }{ \uint }{ The current C-state for the object specified (typically processors but for use with other component types when applicable).  }%
+}
+\newcommand{\aCstateLimitDesc}{%
+	\attribute{CstateLimitDesc}	{\aGS}{\uint}{The lowest C-state allowed for the object specified (typically processors but for use with other component types when applicable).}%
+}
+\newcommand{\aSstateDesc}{%
+	\attribute{SstateDesc}		{\aGS}{\uint}{The current S-state for the object specified (typically processors but for use with other component types when applicable).}%
+}
+\newcommand{\aPowerDesc}{%		
+	\attribute{PowerDesc}		{\aG }{\dbl }{Discrete power value in watts. The power value should be the value measured as close as possible to the time of the function call.}%
+}
+\newcommand{\aCurrentDesc}{%
+	\attribute{CurrentDesc}		{\aG }{\dbl }{Discrete current value in amps. The current value should be the value measured as close as possible to the time of the function call.}%
+}
+\newcommand{\aVoltageDesc}{%
+	\attribute{VoltageDesc}		{\aG }{\dbl }{Discrete voltage value in volts. The voltage value should be the value measured as close as possible to the time of the function call.}%
+}
+\newcommand{\aMaxPowerDesc}{%		
+	\attribute{MaxPowerDesc}	{\aGS}{\dbl }{Maximum power limit (ceiling, upper bound) for the specified object (as in power cap) in watts.}%
+}
+\newcommand{\aMinPowerDesc}{%
+	\attribute{MinPowerDesc}	{\aGS}{\dbl }{Minimum power limit (floor, lower bound) for the specified object in watts.}%
+}
+\newcommand{\aFreqLimitMinDesc}{%	
+	\attribute{FreqLimitMinDesc}	{\aGS}{\dbl }{Minimum operating frequency limit for the specified object in Hz (cycles per second).}%
+}
+\newcommand{\aFreqLimitMaxDesc}{%
+	\attribute{FreqLimitMaxDesc}	{\aGS}{\dbl }{Maximum operating frequency limit for the specified object in Hz (cycles per second).}%
+}
+\newcommand{\aFreqDesc}{%
+	\attribute{FreqDesc}		{\aGS}{\dbl }{The current operating frequency value for the specified object in Hz (cycles per second).}
+}
+\newcommand{\aEnergyDesc}{%
+	\attribute{EnergyDesc}		{\aG }{\dbl }{The cumulative energy used by the specified object in joules. Note that two attribute get calls are typically required to obtain the energy consumed by the specified object. Subtracting the energy value obtained from the first call from the energy value obtained from the second call produces the energy used for the object from the timestamp of the first value through the timestamp of the second value.}%
+}
+\newcommand{\aTempDesc}{%
+	\attribute{TempDesc}		{\aG }{\dbl }{The current temperature value for the specified object in degrees Celsius.}%
+}
+\newcommand{\aOSIdDesc}{%	
+	\attribute{OSIdDesc}		{\aG }{\dbl }{The operating system ID that corresponds to the object. For example, a runtime system may need to figure out which Power API \texttt{PWR\_OBJ\_CORE} objects correspond to the cores that it is controlling. This attribute provides a linkage between Power API objects and operating system IDs.}%
+}
+\newcommand{\aThrottledIdDesc}{%		
+	\attribute{ThrottledIdDesc}	{\aG }{\dbl }{The cumulative time in nanoseconds that the specified object's performance was purposefully slowed in order to meet some constraint, such as a power cap.  }%
+}
+\newcommand{\aThrottledCountIdDesc}{%	
+	\attribute{ThrottledCountIdDesc}{\aG }{\dbl }{The cumulative count of the number of times that the specified object's performance was purposefully slowed in order to meet some constraint, such as a power cap.}%
+}
+\newcommand{\aGovDesc}{%
+	\attribute{GovDesc}		{\aG }{\dbl }{Power related governor capability exposed through the operating system interface.}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% The big list of metadata
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\texttt{PWR\_MD\_NUM}                  & Get     & uint64_t   & Number of values supported. This is only relevant for attributes with a discrete set of values (e.g., \texttt{PWR\_ATTR\_PSTATE}). Other attributes return 0. \\
+\newcommand{\mNum}{%
+	\metadata{num}			{\aG}{\uint}{Number of values supported. This is only relevant for attributes with a discrete set of values (e.g., \texttt{PWR\_ATTR\_PSTATE}). Other attributes return 0.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_MIN}                  & Get     & SaA        & Minimum value supported. \\
+\newcommand{\mMin}{%
+	\metadata{min}			{\aG}{\SaA}{Minimum value supported.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_MAX}                  & Get     & SaA        & Maximum value supported. \\
+\newcommand{\mMax}{%
+	\metadata{max}			{\aG}{\SaA}{Maximum value supported.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_PRECISION}            & Get     & uint64_t   & Number of significant digits in values. \\
+\newcommand{\mPrecision}{%
+	\metadata{precision}		{\aG}{\uint}{Number of significant digits in values.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_ACCURACY}             & Get     & double     & Estimated percent error +/- of measured vs. actual values. \\
+\newcommand{\mAccuracy}{%
+	\metadata{precision}		{\aG}{\dbl}{Estimated percent error +/- of measured vs. actual values.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_UPDATE\_RATE}         & Set/Get & double     & Rate values become visible to user, in updates per second. Getting or setting a value at a rate higher than this is not useful. \\
+\newcommand{\mUpdateRate}{%
+	\metadata{update\_rate}		{\aGS}{\dbl}{Rate values become visible to user, in updates per second. Getting or setting a value at a rate higher than this is not useful.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_SAMPLE\_RATE}         & Set/Get & double     & Rate of underlying sampling, in samples per second. This is only relevant for values derived over time (e.g., \texttt{PWR\_ATTR\_ENERGY}). \\
+\newcommand{\mSampleRate}{%
+	\metadata{sample\_rate}		{\aGS}{\dbl}{Rate of underlying sampling, in samples per second. This is only relevant for values derived over time (e.g., \texttt{PWR\_ATTR\_ENERGY}).}% 
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_TIME\_WINDOW}         & Set/Get & \texttt{PWR\_Time}  & The time window used to calculate the value returned or relevant to an attribute. For example, the ``instantaneous'' \texttt{PWR\_ATTR\_POWER} values reported may actually be averaged over a short time window. Power caps are also enforced with respect to a target time window. \\
+\newcommand{\mTimeWindow}{%
+	\metadata{time\_window}		{\aGS}{\PWR{Time}}{The time window used to calculate the value returned or relevant to an attribute. For example, the ``instantaneous'' \texttt{PWR\_ATTR\_POWER} values reported may actually be averaged over a short time window. Power caps are also enforced with respect to a target time window.}% 
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_TS\_LATENCY}          & Get     & \texttt{PWR\_Time}  & Estimate of the time required to get or set an attribute. This is useful to estimate completion time for an operation \textit{a priori}. A value of zero should be returned when the get/set is instantaneous.\\
+\newcommand{\mTSLatency}{%
+	\metadata{ts\_latency}		{\aG}{\PWR{Time}}{Estimate of the time required to get or set an attribute. This is useful to estimate completion time for an operation \textit{a priori}. A value of zero should be returned when the get/set is instantaneous.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_TS\_ACCURACY}         & Get     & \texttt{PWR\_Time}  & Estimated accuracy of returned timestamps, represented as +/- the \texttt{PWR\_Time} value returned. \\
+\newcommand{\mTSAccuracy}{%
+	\metadata{ts\_accuracy}		{\aG}{\PWR{Time}}{Estimated accuracy of returned timestamps, represented as +/- the \texttt{PWR\_Time} value returned.}% 
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_MAX\_LEN}             & Get     & uint64_t   & The maximum string length that will be returned by the metadata interface. All other string lengths (metadata items ending in ``_LEN'') will be less than or equal to this value.  The value of \texttt{PWR\_MD\_MAX\_LEN} will be less than or equal to \texttt{PWR\_MAX\_STRING\_LEN}. \\
+\newcommand{\mMaxLen}{%
+	\metadata{max\_len}		{\aG}{\uint}{The maximum string length that will be returned by the metadata interface. All other string lengths (metadata items ending in \texttt{\_LEN}) will be less than or equal to this value.  The value of \texttt{PWR\_MD\_MAX\_LEN} will be less than or equal to \texttt{PWR\_MAX\_STRING\_LEN}.}% 
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_NAME\_LEN}            & Get     & uint64_t   & Length of the attribute name string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_NAME} is requested. \\
+\newcommand{\mNameLen}{%
+	\metadata{name\_len}		{\aG}{\uint}{Length of the attribute name string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_NAME} is requested.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_NAME}                 & Get     & char *     & Attribute name string. This is a C-style NULL-terminated ASCII string. This provides a human readable name for the attribute. The string length is given by \texttt{PWR\_MD\_NAME\_LEN}. \\
+\newcommand{\mName}{%
+	\metadata{name}			{\aG}{\uint}{Attribute name string. This is a C-style NULL-terminated ASCII string. This provides a human readable name for the attribute. The string length is given by \texttt{PWR\_MD\_NAME\_LEN}.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_DESC\_LEN}            & Get     & uint64_t   & Length of the attribute description string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_DESC} is requested. \\
+\newcommand{\mDescLen}{%
+	\metadata{desc\_len}		{\aG}{\uint}{Length of the attribute description string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_DESC} is requested.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_DESC}                 & Get     & char *     & Attribute description string. This is a C-style NULL-terminated ASCII string. This provides a human readable description of the attribute that is more descriptive than the attribute's name alone. The string length is given by \texttt{PWR\_MD\_DESC\_LEN}. \\
+\newcommand{\mDesc}{%
+	\metadata{desc}			{\aG}{\ptrchar}{Attribute description string. This is a C-style NULL-terminated ASCII string. This provides a human readable description of the attribute that is more descriptive than the attribute's name alone. The string length is given by \texttt{PWR\_MD\_DESC\_LEN}.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_VALUE\_LEN}           & Get     & uint64_t   & Maximum length of the value strings returned by \texttt{PWR\_MetaValueAtIndex}. This can be used to discover the buffer size that needs to be passed to \texttt{PWR\_MetaValueAtIndex} via the \texttt{value\_str} argument. \\
+\newcommand{\mValueLen}{%
+	\metadata{value\_len}		{\aG}{\uint}{Maximum length of the value strings returned by \texttt{PWR\_MetaValueAtIndex}. This can be used to discover the buffer size that needs to be passed to \texttt{PWR\_MetaValueAtIndex} via the \texttt{value\_str} argument.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_VENDOR\_INFO\_LEN}    & Get     & uint64_t   & Length of the vendor information string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_VENDOR\_INFO} is requested. \\
+\newcommand{\mVendorInfoLen}{%
+	\metadata{vendor\_info\_len}	{\aG}{\uint}{Length of the vendor information string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_VENDOR\_INFO} is requested.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_VENDOR\_INFO}         & Get     & char *     & Vendor provided information string. This is a C-style NULL-terminated ASCII string. This may be used to convey part numbers, configuration, or other non-standard information. The string length is given by \texttt{PWR\_MD\_VENDOR\_INFO\_LEN}. \\
+\newcommand{\mVendorInfo}{%
+	\metadata{vendor\_info}		{\aG}{\ptrchar}{Vendor provided information string. This is a C-style NULL-terminated ASCII string. This may be used to convey part numbers, configuration, or other non-standard information. The string length is given by \texttt{PWR\_MD\_VENDOR\_INFO\_LEN}.}% 
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_MEASURE\_METHOD}      & Get     & uint64_t   & Denotes the measurement method: an actual measurement (returned value = 0) or a model based estimate (return value = 1). Other values $> 1$ may be used to denote multiple vendor specific models in the situation where multiple models may exist. \\
+\newcommand{\mMeasureMethod}{%
+	\metadata{measure\_method}	{\aG}{\ptrchar}{Denotes the measurement method: an actual measurement (returned value = 0) or a model based estimate (return value = 1). Other values $> 1$ may be used to denote multiple vendor specific models in the situation where multiple models may exist.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+% End Macro definitions
+   
+\newcommand{\majorversion}{2}
+\newcommand{\minorversion}{0}
+%
+% Set the title, and author
+%
+\title{High Performance Computing - Power Application Programming Interface Specification \\ Version \majorversion.\minorversion }
+
+\author{James H. Laros III, Ryan E. Grant, Michael Levenhagen,\\
+Stephen Olivier, Kevin Pedretti, Lee Ward, and Andrew J. Younge\\
+Center for Computing Research\\
+Sandia National Laboratories\\
+P.O. Box 5800, Albuquerque, NM 87185-1319\\ 
+\textit{jhlaros,regrant,mjleven,slolivi,ktpedre,lee,ajyoung@sandia.gov}
+} 
+%
+\date{January 2018}
+% ---------------------------------------------------------------------------- %
+%
+% Start the document
+%
+\begin{document}
+\maketitle
+\begin{abstract}
+Measuring and controlling the power and energy consumption of high performance computing systems by various components in the software stack is an active research area 
+~\cite{6604474,6604496,
+5488433,
+Liu:2012:RCA:2318857.2254779,
+Chen:2013:DSP:2561828.2561853,
+Yang:2013:IDP:2503210.2503264,
+Wallace:2013:CLUSTER:2503210.2503264,
+Shoukourian2013,
+conf:icdcn:GeorgiouCGAJH14,
+Trader:2013:report:GreenComputing,
+6337489,
+Vishnu:2013:JSC:s11227-011-0699-9,
+Mills:2013:EES:2536430.2536432,
+Bertran:2013:IBM:2012.2227580,
+Georgiou:2013:Bull,
+6604481,
+6604508}.
+Implementations in lower level software layers are beginning to emerge in some production systems, which is very welcome.
+To be most effective, a portable interface to measurement and control features would significantly facilitate participation by all levels of the software stack.
+We present a proposal for a standard power Application Programming Interface (API) that endeavors to cover the entire software space, from generic hardware interfaces to the input from the computer facility manager.
+
+    \end{abstract}
+    \chapter*{Acknowledgment}
+Support for this work was provided through the Advanced Simulation and Computing (ASC) program funded by U.S. Department of Energy's National Nuclear Security Agency.
+We wish to thank our colleagues, Steve Hammond, Ryan Elmore, and Kris Munch at the National Renewable Energy Laboratory (NREL) for their contributions to the use case model which was the progenitor of this work.
+This effort was greatly enhanced by interactions with staff throughout Sandia as well as many external organizations. 
+
+The addition of the Python language bindings in version 2.0 of the Power API specification would not have been possible without contributions from Steve Martin (Cray), Matthew Kappel (Cray) and Leo Maurer (Cray), Paul Falde (Cray) and valuable feedback from Johnathan Woodring (Los Alamos National Laboratory)
+
+Feedback and additions to the application hints interface were provided by Chris Cantalupo and Steve Sylvester of Intel.
+
+The following individuals contributed to the specification during the version 1.X series: Sue Kelly (Sandia National Laboratories) and David DeBonis (Sandia National Laboratories). 
+
+Prior to the first open release of this specification a select group of individuals agreed to review an early draft of the specification and provide feedback. 
+We would like to recognize the very significant contributions these individuals made and thank them for their time and efforts. 
+The following individuals participated in an all day face-to-face review of the specification and provided written feedback (listed in alphabetical order): David Jackson (Adaptive Computing), Steve Martin (Cray), Indrani Paul (AMD), Phil Pokorny (Penguin Computing), Avi Purkayastha (National Renewable Energy Laboratory), Muralidhar Rajappa (Intel), and Jeff Stuecheli (IBM).
+The following individuals provided written feedback of the specification (listed in alphabetical order): Dorian Arnold (University of New Mexico), Natalie Bates (EEHPC), and Chung-Hsing Hsu (Oak Ridge National Laboratory).
+We hope to continue these important collaborations and develop new ones in an effort to represent and serve the HPC community as best we can.
+
+
+
+	\tableofcontents
+
+	\chapter{Introduction}						%PWR-free
+	\input{Introduction}
+
+	\chapter{Theory of Operation}\label{chap:Theory}
+	\input{TheoryOfOperation}
+
+	\chapter{Type Definitions}\label{chap:TypeDefinitions}
+	\input{TypeDefs}
+
+	\chapter{Core (Common) Interface Functions}\label{chap:Common}
+	\input{Common}
+      
+	\chapter{High-Level (Common) Functions}\label{chap:HighLevel}
+	\input{HighLevel}
+
+	\chapter{Role/System Interfaces}\label{chap:Interfaces}
+	\input{Interfaces}
+
+	\chapter{Conclusion}
+	\input{Conclusion}
+
+	% References
+	\nocite{*}
+
+	\clearpage
+	\providecommand*{\phantomsection}{}
+	\phantomsection
+	\addcontentsline{toc}{chapter}{References}
+	\bibliographystyle{plain}
+	\bibliography{references}
+
+	%\appendix
+	\begin{appendices}
+
+		\chapter{Topics Under Consideration for Future Versions}
+		\input{FutureVersion}
+
+		\chapter{Change Log}
+		\input{ChangeLog}
+
+		\chapter{Alternative Programming Language Bindings: Python}
+		\input{LanguageBindings}
+
+	\end{appendices}
+
+	\clearpage
+	\chapter{Index}
+	{\scriptsize
+	\printindex}
+	%\addcontentsline{toc}{chapter}{Index}
+
+
+\end{document}

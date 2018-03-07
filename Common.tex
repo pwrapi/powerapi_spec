@@ -1,0 +1,961 @@
+% These have been superceded by the \newenvironment{prototype} macros.  Remove after conversion.
+\newcommand{\ArgHdr}{   \begin{center}
+			\begin{tabular}{ | p{5cm} | p{2.1cm} | p{7.5cm} |}
+			\hline 
+			\textbf{Argument(s)} & \textbf{Input } & \textbf{Description} \\  
+			 		     & \textbf{and/or} & \\ 
+					     & \textbf{Output} & \\ 
+			\hline 
+}
+\newcommand{\ArgLn}[3]{\texttt{#1} & #2 & #3 \\ \hline}
+\newcommand{\ArgFtr}{ 	\end{tabular}
+			\end{center}
+}
+
+
+
+Core, or so called Common, interface functions are functions that can be used, at least in par, by most of the interfaces described in the Power API specification. 
+Core functions include the following areas:
+\begin{itemize}[noitemsep,nolistsep] 
+\item{\textbf{Initialization}, required to use any of the functionality described in this specification, }
+\item{\textbf{Navigation}  functions allow the user to traverse the system description and discover information about the underlying platform, }
+\item{\textbf{Group} functions, primarily a convenience abstraction,}
+\item{\textbf{Attribute} functions expose measurement and control functionality, }
+\item{\textbf{Metadata} functions allow the user to access additional information about objects and attributes (often device or instrumentation specific information), }
+\item{\textbf{Statistics} functions are used to generate statistical information based on fundamental attribute information (measurements),}
+\end{itemize}
+and other functionality that is common across a number of interfaces.
+
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+
+\section{Initialization}\label{sec:Initialization}
+
+Initialization using \texttt{PWR_CntxtInit} is required to use any of the functionality documented in this specification.
+The user supplies the type of the context requested and their role. 
+Currently, the specification's only required context type is \texttt{PWR_CNTXT_DEFAULT}.
+The context type is intended to be one way in which the implementor can distinguish their implementation from the standard specification and other implementations (see section \ref{sec:ContextTypeDefinitions}).
+The user must also supply their role (see page \pageref{type:Role} for the \texttt{PWR_Role} definition).
+One purpose of specifying the role is to convey what type of user they intend to be, and therefore, how they would like to interact with or how the underlying implementation manages the privileges granted to the user/role combination.
+A system administrator (\texttt{PWR_ROLE_ADMIN}) will desire and require different capabilities, privileges and level of abstraction than the application user (\texttt{PWR_ROLE_APP}), for example.
+
+The user also has the opportunity to specify a name that will be associated with the context. 
+This \textit{feature} is anticipated to be useful in supporting advanced functionality.
+Initialization returns a context to the user.
+The context contains the user's view of the system, dependent on what type of context was requested, the user's role and implementation specifics.
+The system description that the user is exposed to must conform to the rules outlined in the specification (see sections \ref{sec:PowerAPIInit} and \ref{sec:PowerAPIBaseSysDesc}).
+The context should be destroyed (cleaned up) by using the \texttt{PWR_CntxtDestroy} function when no longer needed.
+
+%=============================================================================%
+%int PWR_CntxtInit( PWR_CntxtType type, PWR_Role role, const char* name, PWR_Cntxt* context);
+\begin{prototype}{CntxtInit}
+	\longdescription{ The \PWR{CntxtInit} function is required to be called before using any other Power API function.  The context returned is passed to other Power API functions either explicitly as an argument or implicitly through an argument associated with the context.
+	}
+	\pnote{See page \pageref{type:CntxtType} for a discussion of contexts and roles.}
+	\returntype{int}
+	\parameter{\PWR{CntxtType} type}{\pInput} 	{The requested context type.}
+	\parameter{\PWR{Role} role}	{\pInput} 	{The role of the user.}
+	\parameter{const char* name}  	{\pInput} 	{User specified string name to be associated with the context.}
+	\parameter{\PWR{Cntxt}* context}{\pOutput}	{The user's context.}
+	\returnval{\PWR{RET_SUCCESS}}			{Upon SUCCESS, context is set to a valid user context.}
+	\returnval{\PWR{RET_FAILURE}}			{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int    PWR_CntxtDestroy( PWR_Cntxt context );
+\begin{prototype}{CntxtDestroy}
+	\longdescription{The \PWR{CntxtDestroy} function is used to destroy (clean up) the context obtained with \PWR{CntxtInit}. The implementation is required to clean up, unlink, destroy (as appropriate) all context resources as a result of this call.}
+	\returntype{int}
+	\parameter{PWR_Cntxt context}{\pInput}{The context obtained using \PWR{CntxtInit} the user wishes to destroy.}
+	\returnval{\PWR{RET_SUCCESS}}	{Upon SUCCESS.}
+	\returnval{\PWR{RET_FAILURE}}	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+
+
+\section{Hierarchy Navigation Functions}\label{sec:Navigation}
+
+Hierarchy navigation (also called discovery) is accomplished using attributes (EntryPoint, Type, Parent and Children) that are implicit to every object in the system description whether defined in the specification or added by the implementor.
+Navigation is accomplished using these attributes, through the associated function calls, within the context made available to the user upon initialization.
+After initialization the first call will generally be \texttt{PWR_CntxtGetEntryPoint} to determine the user's entry point in the system hierarchy provided within the user's context. 
+Depending on the user, the interface and the role, the context could contain a view of the entire system description or a subset of the system description.
+Navigating through the hierarchy is accomplished with \texttt{PWR_ObjGetParent} to navigate up and \texttt{PWR_ObjGetChildren} to navigate down.
+To understand what kind of object was returned with either of these calls the user can utilize \texttt{PWR_ObjGetType} call.
+The name of the object can be discovered using the \texttt{PWR_ObjGetName} function and if the user has a name, the associated object can be discovered using the \texttt{PWR_CntxtGetObjByName} function. 
+
+The Power API does not provide an explicit ``Free Object'' interface.
+Specifically, objects returned by Power API interfaces do not need to be later freed or released explicitly.
+This design choice was made in order to keep usage of the Power API as simple as possible, with the potential cost of an increased burden on the Power API implementor to limit implementation-internal memory usage.
+
+
+%=============================================================================%
+%int    PWR_CntxtGetEntryPoint( PWR_Cntxt context, PWR_Obj* entry_point );
+\begin{prototype}{CntxtGetEntryPoint}
+	\longdescription{The \texttt{PWR_CntxtGetEntryPoint} call is typically used immediately following initialization.  Whenever \texttt{PWR_CntxtGetEntryPoint} is called the implementation defined entry point (location) in the system description is returned.  \texttt{PWR_CntxtGetEntryPoint} can always be called to reposition or reorient the user to the initial entry location.}
+	\returntype{int}
+	\parameter{PWR_Cntxt context}   {\pInput} 	{The user's context.}
+	\parameter{PWR_Obj* entry_point}{\pOutput}	{The user's entry point into the system description (the same for the life of the context).}
+	\returnval{PWR_RET_SUCCESS} 			{ Upon SUCCESS, entry_point set to system description entry point (object).}	
+	\returnval{PWR_RET_FAILURE} 			{ Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int    PWR_ObjGetType( PWR_Obj object, PWR_ObjType* type );
+\begin{prototype}{ObjGetType}
+	\longdescription{ The \texttt{PWR_ObjGetType} function returns the type of the object specified.  See page \pageref{type:ObjType} for valid object types.}
+	\returntype{int}
+	\parameter{PWR_Obj object}	{\pInput}	{The object that the user wishes to determine the type of.}
+	\parameter{PWR_ObjType* type}	{\pOutput}	{The type of the specified object.}
+	\returnval{PWR_RET_SUCCESS} 	{ Upon SUCCESS, type is set to the type of the specified object.}
+	\returnval{PWR_RET_FAILURE} 	{ Upon FAILURE, type is set to PWR_OBJ_INVALID.}
+\end{prototype}
+%=============================================================================%
+%int    PWR_ObjGetName( PWR_Obj object, char* dest, size_t len );
+\begin{prototype}{ObjGetName}
+	\longdescription{The \texttt{PWR_ObjGetName} function copies the name of the specified object into the user provided buffer.  See page \pageref{func:CntxtGetObjByName} to get the object based on the unique name using \texttt{PWR_CntxtGetObjByName}.}
+	\returntype{int}
+	\parameter{PWR_Obj object}	{\pInput}	{The object that the user wishes to determine the name of.}
+	\parameter{char* dest}    	{\pInput}	{The address of the user provided buffer.}
+	\parameter{size_t len}    	{\pInput}	{The length of the user provided buffer.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS, the buffer will contain the name of the object, the string will include a terminating null byte.}	
+	\returnval{PWR_RET_WARN_TRUNC} 	{Call succeeded, but the length of object name was longer than the provided buffer and the name was truncated.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_ObjGetParent( PWR_Obj object, PWR_Obj* parent );
+\begin{prototype}{ObjGetParent}
+	\longdescription{The \texttt{PWR_ObjGetParent} function is used to find the object immediately above the specified object in the system description available to the user through the current context.  Note, currently, there are some cases where an object has no parent, namely the platform object.}
+	\returntype{int}
+	\parameter{PWR_Obj object} {\pInput} 		{The object that the user wishes to determine the parent of.}
+	\parameter{PWR_Obj* parent}{\pOutput}		{The parent object of the specified input object.}
+	\returnval{PWR_RET_SUCCESS}        		{Upon SUCCESS, parent set to parent of specified object.}
+	\returnval{PWR_RET_WARN_NO_PARENT} 		{Call succeeded but specified object does not have a parent.}
+	\returnval{PWR_RET_FAILURE}        		{Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%int     PWR_ObjGetChildren( PWR_Obj object, PWR_Grp* group );
+\begin{prototype}{ObjGetChildren}
+	\longdescription{The \texttt{PWR_ObjGetChildren} function returns the child or children of the specified object.  The caller is expected to check the return code of \texttt{PWR_ObjGetChildren} to determine if the object has children or not.  If the specified object has one or more children, indicated by a return code of \texttt{PWR_RET_SUCCESS}, a new group (\texttt{PWR_Grp}) is returned that contains the object's children.  The user is responsible for destroying this group when it is no longer needed (see \texttt{PWR_GrpDestroy} on page \pageref{func:GrpDestroy}).  If the specified object has no children, indicated by a return code of \texttt{PWR_RET_WARN_NO_CHILDREN}, no group is returned and the input (\texttt{PWR_Grp}) is not modified.}
+	\returntype{int}
+	\parameter{PWR_Obj objec}	{\pInput}	{The object that the user wishes to determine the children of.}
+	\parameter{PWR_Grp* group}	{\pOutput}	{On input, this should be set to point to an uninitialized \texttt{PWR_Grp} (i.e., the caller should not call \texttt{PWR_GrpCreate} ahead of time).  If \texttt{PWR_RET_SUCCESS} is returned, *group will be set to a newly created group containing the \texttt{object}'s children.  If \texttt{PWR_RET_WARN_NO_CHILDREN} is returned, the input \texttt{PWR_Grp} is not modified.}
+	\returnval{PWR_RET_SUCCESS}          		{Upon SUCCESS, group is set to a newly created group containing the child or children of specified object.}
+	\returnval{PWR_RET_WARN_NO_CHILDREN} 		{Call succeeded but specified object does not have any children. The input \texttt{PWR_Grp} is not modified.}
+	\returnval{PWR_RET_FAILURE}          		{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int    PWR_CntxtGetObjByName( PWR_Cntxt context, const char* name, PWR_Obj* object);
+\begin{prototype}{CntxtGetObjByName}
+	\longdescription{The \texttt{PWR_CntxtGetObjByName} function returns the object given the context and unique object name.  See page \pageref{func:ObjGetName} to get the name of a specified object using \texttt{PWR_ObjGetName}.}
+	\returntype{int}
+	\parameter{PWR_Cntxt context}	{\pInput}{The context containing the object that the user wishes to retrieve given its unique name. Note, the object may be present in the system but not available to the user through the current context.}
+	\parameter{const char * name}	{\pInput}{The unique name of the object that the user wishes to retrieve.}
+	\parameter{PWR_Obj* object}	{\pOutput}{The object that corresponds to the name specified by the user.}
+	\returnval{PWR_RET_SUCCESS}             	{Upon SUCCESS, object is set to object corresponding to name specified by user.}
+	\returnval{PWR_RET_WARN_NO_OBJ_BY_NAME} 	{If no object exists corresponding to name provided.}
+	\returnval{PWR_RET_FAILURE}             	{Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+\section{Group Functions}\label{sec:Group}
+
+Group functions are provided as a convenience in situations, for example, where an operation, or operations are required to be executed on multiple objects. 
+Rather than executing the same operation multiple times, once for each object, some operations provide a group variant to streamline this type of functionality.
+Groups can be dynamically created (\texttt{PWR_GrpCreate}) when needed and can exist for short periods of time and destroyed with \texttt{PWR_GrpDestroy}, or exist for the duration of the users context.
+Groups may not contain multiple instances of the same object, i.e. duplicate objects are not allowed.
+When a new group is the product of a function (\texttt{PWR_GrpUnion, PWR_GrpIntersection, PWR_GrpDifference}) and the result of the function operation is the empty set (no objects) an empty group (group with no objects)  should be the result and the function should return \texttt{PWR_RET_SUCCESS}. 
+It is the responsibility of the user to clean up all groups produced as a result of group functions using \texttt{PWR_GrpDestroy}.
+Groups can only contain objects from a single \texttt{PWR_cntxt}.
+Group operations that involve multiple groups must be performed with groups from the same context.
+
+%int PWR_GrpCreate( PWR_Cntxt context, PWR_Grp* group );
+\begin{prototype}{GrpCreate}
+	\longdescription{The \texttt{PWR_GrpCreate} function is used to create a new group which will be associated with and unique to the users context.}
+	\returntype{int}
+	\parameter{PWR_Cntxt context}	{\pInput} {The user's context that the group, when created, will be associated with.}
+	\parameter{PWR_Grp* group}   	{\pOutput}{The new (empty) group.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS, group is set to new (empty) group.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int PWR_GrpDestroy( PWR_Grp group );
+\begin{prototype}{GrpDestroy}
+	\longdescription{The \texttt{PWR_GrpDestroy} function is used to destroy (clean up) a group created by a user.}
+	\returntype{int}
+	\parameter{PWR_Grp group}{\pInput}{The group that the user is acting on.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int PWR_GrpAddObj( PWR_Grp group, PWR_Obj object );
+\begin{prototype}{GrpAddObj}
+	\longdescription{The \texttt{PWR_GrpAddObj} function is used to add a specified object to a specified group.  Duplicate objects are not allowed in groups.  Adding an object that would be a duplicate of one already in the group will result in no insertion and returns \texttt{PWR_RET_SUCCESS}.}
+	\returntype{int}
+	\parameter{PWR_Grp group} 	{\pInputOutput}	{The group that the user is acting on.}
+	\parameter{PWR_Obj object}	{\pInput}       {The object to be added to the specified group.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int PWR_GrpRemoveObj( PWR_Grp group, PWR_Obj object );
+\begin{prototype}{GrpRemoveObj}
+	\longdescription{The \texttt{PWR_GrpRemoveObj} function is used to remove a specified object from a specified group.  Attempting to remove an object that is not a member of a group will result in \texttt{PWR_RET_SUCCESS}.}
+	\returntype{int}
+	\parameter{PWR_Grp group} 	{\pInputOutput}	{The group that the user is acting on.}
+	\parameter{PWR_Obj object}	{\pInput}       {The object to be removed from the specified group.}
+	\returnval{PWR_RET_SUCCESS}  	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE}  	{Upon FAILURE.}
+\end{prototype}
+%=============================================================================%
+%int PWR_GrpGetNumObjs( PWR_Grp group );
+\begin{prototype}{GrpGetNumObjs}
+	\longdescription{The \texttt{PWR_GrpGetNumObjs} function is used to get the number of objects contained in the specified group.} \returntype{int} \parameter{PWR_Grp group}{\pInput}{The group that the user is acting on.}
+	\returnval{int} 		{Upon SUCCESS, the number of objects contained in the specified group.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int PWR_GrpGetObjByIndx( PWR_Grp group, int index, PWR_Obj* object);
+\begin{prototype}{GrpGetObjByIndx}
+	\longdescription{The \texttt{PWR_GrpGetObjByIndx} is used to get the object from the specified group at the specified index.}
+	\returntype{int}
+	\parameter{PWR_Grp group}  {\pInput} {The group that the user is acting on.}
+	\parameter{int  index}     {\pInput} {The index within the specified group of the desired object.}
+	\parameter{PWR_Obj* object}{\pOutput}{The object at the specified index in the specified group.}
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS, object is set to object at specified index.}
+	\returnval{PWR_RET_NO_OBJ_AT_INDEX} 	{No object at specified index in specified group.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE.}
+\end{prototype}
+%=============================================================================%
+%int PWR_GrpDuplicate( PWR_Grp group1, PWR_Grp* group2 );
+\begin{prototype}{GrpDuplicate}
+	\longdescription{The \texttt{PWR_GrpDuplicate} function is used to duplicate an existing group.  The duplicate group is a new separate group from the original group specified.  Actions on the duplicate group do not affect the original group and vice versa.}
+	\returntype{int}
+	\parameter{PWR_Grp group1}	{\pInput}{The original group (group1).}
+	\parameter{PWR_Grp* group2}	{\pOutput}{Duplicate (group2) of the original group (group1) specified by user even if the original group contains no objects.}
+
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS, duplicate group of original group created.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int PWR_GrpUnion( PWR_Grp group1, PWR_Grp group2, PWR_Grp* group3);
+\begin{prototype}{GrpUnion}
+	\longdescription{The \texttt{PWR_GrpUnion} function is used to create a group that is the union ($\cup$) of two specified groups.  The union group created is a new separate group from the original groups specified.  Actions on the union group do not affect the original groups and vice versa.}
+	\returntype{int}
+	\parameter{PWR_Grp group1}	{\pInput}{The first of the two groups used in the union, ($\cup$) operation.}
+	\parameter{PWR_Grp group2}	{\pInput}{The second of the two groups used in the union, ($\cup$) operation.}
+	\parameter{PWR_Grp* group3}	{\pOutput}{he output group (group3) is the union, ($\cup$) operation, of the first (group1) and second (group2) groups specified. If the result of the union operation is the empty set group3 is an empty group (valid group with no objects).}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS, group3 contains the union of group1 and group2.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int PWR_GrpIntersection( PWR_Grp group1, PWR_Grp group2, PWR_Grp* group3);
+\begin{prototype}{GrpIntersection}
+	\longdescription{The \texttt{PWR_GrpIntersection} function is used to create a group that is the Intersection ($\cap$) of two specified groups.  The intersection group is a new separate group from the original groups specified.  Actions on the intersection group do not affect the original groups and vice versa.}
+	\returntype{int}
+	\parameter{PWR_Grp group1}	{\pInput}{The first of the two groups used in the Intersection ($\cap$)  operation.}
+	\parameter{PWR_Grp group2}	{\pInput}{The second of the two groups used in the intersection ($\cap$) operation.}
+	\parameter{PWR_Grp* group3}	{\pOutput}{The output group (group3) is the intersection, ($\cap$) operation, of the first (group1) and second (group2) groups specified. If the result of the intersection operation is the empty set group3 is an empty group (valid group with no objects).}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS, group3 contains the intersection of group1 and group2.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%int PWR_GrpDifference( PWR_Grp group1, PWR_Grp group2, PWR_Grp* group3 );
+\begin{prototype}{GrpDifference}
+	\longdescription{The \texttt{PWR_GrpDifference} function is used to create a group that is the Difference ($\setminus$) of two specified groups.  The difference group is a new separate group from the original groups specified.  Actions on the difference group do not affect the original groups and vice versa.  In the event that the output \texttt{PWR_Grp} contains no objects see~\ref{sec:Group} for the definition of the output, \texttt{PWR_Grp}.}
+	\returntype{int}
+	\parameter{PWR_Grp group1}	{\pInput}{The first of the two groups used in the difference ($\setminus$)  operation.}
+	\parameter{PWR_Grp group2}	{\pInput}{The second of the two groups used in the difference ($\setminus$) operation.}
+	\parameter{PWR_Grp* group3}	{\pOutput}{The output group (group3) is the difference, ($\setminus$) operation, of the first (group1) and second (group2) groups specified. If the result of the difference operation is the empty set group3 is an empty group (valid group with no objects).}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS,  group3 contains the difference of group1 and group2.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+
+\subsubsection{Function Prototype for PWR_GrpSymDifference()}\label{func:GrpSymDifference}
+%int PWR_GrpSymDifference( PWR_Grp group1, PWR_Grp group2, PWR_Grp* group3 );
+\begin{prototype}{GrpSymDifference}
+	\longdescription{The \texttt{PWR_GrpSymDifference} function is used to create a group that is the Symmetric Difference ($\triangle$) of two specified groups.  The symmetric difference group is a new separate group from the original groups specified.  Actions on the symmetric difference group do not affect the original groups and vice versa.  In the event that the output \texttt{PWR_Grp} contains no objects see~\ref{sec:Group} for the definition of the output, \texttt{PWR_Grp}.}
+	\returntype{int}
+	\parameter{PWR_Grp group1}{Input}{The first of the two groups used in the symmetric difference ($\triangle$)  operation.}
+	\parameter{PWR_Grp group2}{Input}{The second of the two groups used in the symmetric difference ($\triangle$) operation.}
+	\parameter{PWR_Grp* group3}{Output}{The output group (group3) is the symmetric difference, ($\triangle$) operation, of the first (group1) and second (group2) groups specified. If the result of the symmetric difference operation is the empty set group3 is an empty group (valid group with no objects).}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS,  group3 contains the symmetric difference of group1 and group2.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+% int   PWR_CntxtGetGrpByName( PWR_Cntxt context, const char* name, PWR_Grp* group);
+\begin{prototype}{CntxtGetGrpByName}
+	\longdescription{The \texttt{PWR_CntxtGetGrpByName} function returns a group in a given context via a unique group name.  This function is included to allow the user to make use of groups that are provided with the initial context by the implementation.  The list of valid group names should be provided by the vendor in their documentation.  Due to the defined group names being vendor specific, use of this function should be considered non-portable.  The group returned by this call must be functionally identical to a group created via \texttt{PWR_GrpCreate()}.  Like a group created with \texttt{PWR_GrpCreate()} groups returned by \texttt{PWR_CntxtGetGrpByName()} must be destroyed with the \texttt{PWR_GrpDestroy()} call.}
+	\returntype{int}
+	\parameter{PWR_Cntxt context}	{\pInput}	{The context containing the group that the user wishes to retrieve given its unique name.}
+	\parameter{const char* name}	{\pInput}	{The unique name of the group that the user wishes to retrieve.}
+	\parameter{PWR_grp* group}	{\pOutput}	{The implementation provided group corresponding to the specified name.}
+	\returnval{PWR_RET_SUCCESS}        		{Upon SUCCESS, group corresponding to the specified name.}
+	\returnval{PWR_RET_WARN_NO_GRP_BY_NAME} 	{If no implementation supplied group exists corresponding to name provided.}
+	\returnval{PWR_RET_FAILURE}             	{Upon FAILURE.}
+\end{prototype}
+
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+
+\section{Attribute Functions}\label{sec:Attributes}
+
+The Attribute functions make up the foundation of the Power API specification, providing measurement (get) and control (set) interfaces for a wide range of power and energy related functionality.
+Get and set interfaces are provided for single attribute/single object, multiple attribute/single object, single attribute/multiple objects (group) and multiple attributes/multiple objects (group).
+In each case the user specifies the attribute or attributes to get or set.
+The valid attribute names are defined in the \texttt{PWR_AttrName} structure (see page \pageref{type:AttrName}).
+A complete list of all the valid attributes and their meanings can be found in table \ref{table:MasterAttributeTable}, section \ref{sec:BLOA}.
+The timestamp is a critical part of the get (measurement) interface for power and energy related information.
+It is very important that the timestamp returned (\texttt{PWR_Time}) be an accurate representation of when the value returned was measured to the best possible temporal accuracy, not when the function was called.
+It is required by the specification that the value returned is the value that was measured as close as possible to when the get function was called.
+The quality of the measurement and timestamp are device and implementation dependent.
+Information about each attribute can be obtained through the metadata interface, described in section \ref{sec:METADATA}.
+
+%
+%==============================================================================%
+%int PWR_ObjAttrGetValue( PWR_Obj object, PWR_AttrName attr, void* value, PWR_Time* ts );
+\begin{prototype}{ObjAttrGetValue}
+	\longdescription{The \texttt{PWR_ObjAttrGetValue} function is provided to get the value of a single specified attribute (\texttt{PWR_AttrName attr}) from a single specified object (\texttt{PWR_Obj object}).  The timestamp returned (\texttt{PWR_Time *ts}) should accurately represent when the value was measured.}
+	\returntype{int}
+	\parameter{PWR_Obj object}	{\pInput}	{The target object.}
+	\parameter{PWR_AttrName attr}	{\pInput}	{The target attribute. See section \ref{type:AttrName} for a list of available attributes}
+	\parameter{void* value}		{\pOutput}	{Pointer to caller-allocated storage, of 8 bytes, to hold the value read from the attribute.}
+	\parameter{PWR_Time* ts}	{\pOutput}	{Pointer to caller-allocated storage to hold the timestamp of when the value was read from the attribute. Pass in \texttt{NULL} if the timestamp is not needed.}
+	\returnval{PWR_RET_SUCCESS} 			{Upon SUCCESS.}
+	\returnval{PWR_RET_NOT_IMPLEMENTED} 		{The requested attribute is not supported for the target object.}
+	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_ObjAttrSetValue( PWR_Obj object, PWR_AttrName attr, const void* value );
+\begin{prototype}{ObjAttrSetValue}
+	\longdescription{The \texttt{PWR_ObjAttrSetValue} function is provided to set the value of a single specified attribute (\texttt{PWR_AttrName attr}) of a single specified object (\texttt{PWR_Obj object}).}
+	\returntype{int}
+	\parameter{PWR_Obj object}	{\pInput}	{The target object.}
+	\parameter{PWR_AttrName attr}	{\pInput}	{The target attribute. See section \ref{type:AttrName} for a list of available attributes.}
+	\parameter{const void* value}	{\pInput}	{Pointer to the 8 byte value to write to the attribute.}
+	\returnval{PWR_RET_SUCCESS} 			{Upon SUCCESS.}
+	\returnval{PWR_RET_NOT_IMPLEMENTED} 		{The requested attribute is not supported for the target object.}
+	\returnval{PWR_RET_BAD_VALUE} 			{The value was not appropriate for the target attribute.}
+	\returnval{PWR_RET_OUT_OF_RANGE} 		{The value was out of range for the target attribute.}
+	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_StatusCreate( PWR_Cntxt context, PWR_Status* status );
+\begin{prototype}{StatusCreate}
+	\longdescription{The \texttt{PWR_StatusCreate} function is provided to create the \texttt{PWR_Status} object that will be used in functions that perform multiple operations and potentially return individual statuses for each operation.  It is up to the implementation to create the appropriate amount of storage for the \texttt{PWR_Status} structure based on the implementation and the number of statuses that will be held.  \texttt{PWR_Status} objects can only be used in the context in which they are created, attempting to use a \texttt{PWR_Status} object in a context other than the one it was created for will result in an error.  For example see \texttt{PWR_ObjAttrGetValues} on page \pageref{func:ObjAttrGetValues}.  Note, \texttt{PWR_Status} is an opaque handle, its backing definition is determined by the implementor (see \ref{sec:OpaqueTypes}).  It is intended that the implementation only allocate space for failed operations.  Errors are read from the \texttt{PWR_Status} by popping them off the structure which requires the structure to only be as large as the number of error returns require.  When status objects are passed into a function, they are automatically cleared, therefore errors should always be checked on a status object before reuse.  \emph{Note to Users: Caution is advised when reusing status objects in multiple threads. Common thread safety practices must be followed to ensure that errors are properly caught. Creating status objects for each thread is advised to avoid potential race conditions.}}
+	\returntype{int}
+	\parameter{PWR_Cntxt context}	{\pInput}	{The context in which the new status is to be used.}
+	\parameter{PWR_Status* status}	{\pOutput}	{The new status structure.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_StatusDestroy( PWR_Status status );
+\begin{prototype}{StatusDestroy}
+	\longdescription{The \texttt{PWR_StatusDestroy} function is provided to 	destroy the \texttt{PWR_Status} object created using \texttt{PWR_StatusCreate} (see page \pageref{func:StatusCreate}.  Note, \texttt{PWR_Status} is an opaque handle, its backing definition is determined by the implementor (see \ref{sec:OpaqueTypes}).}
+	\returntype{int}
+	\parameter{PWR_Status status}	{\pInput}	{The \texttt{PWR_Status} structure the user wishes to destroy.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_StatusPopError( PWR_Status status, PWR_AttrAccessError* error );
+\begin{prototype}{StatusPopError}
+	\longdescription{The \texttt{PWR_StatusPopError} function is provided to iterate through the \texttt{PWR_Status} object created using \texttt{PWR_StatusCreate} (see page \pageref{func:StatusCreate}) and populated using any of the function calls that leverage this structure.  Using this method allows the \texttt{PWR_Status} structure to only grow as large as necessary storing only error returns.  Note, \texttt{PWR_Status} is an opaque handle, its backing definition is determined by the implementor (see \ref{sec:OpaqueTypes}). The \texttt{PWR_AttrAccessError} structure that is returned will always have its \texttt{obj}, \texttt{attr}, and \texttt{error} fields set to the object, attribute, and error code associated with the error.  The \texttt{PWR_AttrAccessError} structure's index field will only be set for attribute get functions (e.g., \texttt{PWR_ObjAttrGetValues}), and indicates the index in the output value array where the error occurred.  For attribute get functions, errors are returned by \texttt{PWR_StatusPopError} in ascending order by index.}
+	\returntype{int}
+	\parameter{PWR_Status status}		{\pInput}	{The \texttt{PWR_Status} structure the user wishes to examine (iterate over).}
+	\parameter{PWR_AttrAccessError* error}	{\pOutput}	{Pointer to a  \texttt{PWR_AttrAccessError} structure (see page \pageref{type:AttrAccessError}) to hold the status that is popped from the \texttt{PWR_Status} structure.}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
+	\returnval{PWR_RET_EMPTY}   {Returned when all errors have been popped.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%int PWR_StatusClear( PWR_Status status )
+\begin{prototype}{StatusClear}
+	\longdescription{The \texttt{PWR_StatusClear} function is provided to clear a previously used \texttt{PWR_Status} object created using \texttt{PWR_StatusCreate}, (see page \pageref{func:StatusCreate}) basically allowing reuse of the same structure if multiple calls are executed and examined in sequence.  Note, \texttt{PWR_Status} is an opaque handle, its backing definition is determined by the implementor (see \ref{sec:OpaqueTypes}).}
+	\returntype{int}
+	\parameter{PWR_Status status}	{\pInput}	{The \texttt{PWR_Status} structure the user wishes to clear (reuse).}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%int PWR_ObjAttrGetValues( PWR_Obj object, int count, const PWR_AttrName attrs[], void* values, PWR_Time ts[], PWR_Status status );
+\begin{prototype}{ObjAttrGetValues}
+	\longdescription{The \texttt{PWR_ObjAttrGetValues} function is provided to get the value of multiple specified attributes listed in the \texttt{PWR_AttrName attrs[]} array from a single specified object -- \textbf{get multiple attribute values from a single object}.  The timestamps returned in the \texttt{PWR_Time ts[]} array should accurately represent, and correspond sequentially, with the time each value returned was measured.  If the function fails for one or more attributes, the \texttt{PWR_Status status} structure returned can be examined for additional information regarding the failure using \texttt{PWR_StatusPopError} (see page \pageref{func:StatusPopError}).}
+	\returntype{int}
+	\parameter{PWR_Obj object}		{\pInput}{The target object.}
+	\parameter{int count}			{\pInput}{The number of elements in the \texttt{attrs[]}, \texttt{*values}, and \texttt{ts[]} arrays.}
+	\parameter{const PWR_AttrName attrs[]}	{\pInput}{The array of target attributes to read. See section \ref{type:AttrName} for a list of available attributes.}
+	\parameter{void* values}		{\pOutput}	{The array of values read, one value for each target attribute. This should point to caller-allocated storage of at least (\texttt{count * 8}) bytes. Upon success, the value read for attribute \texttt{attrs[i]} will be located at address (\texttt{values+(i*8)}).}
+	\parameter{PWR_Time ts[]}		{\pOutput}{The array of timestamps, one timestamp for each value read. This should point to caller-allocated storage of at least (\texttt{count*sizeof(PWR_Time)}). Upon success, the timestamp of the value read for \texttt{attrs[i]} will be located at ts[i]. Pass in \texttt{NULL} if timestamps are not needed.}
+	\parameter{PWR_Status status}		{\pOutput}{Upon \texttt{PWR_RET_FAILURE}, \texttt{status} contains information about each failure that occurred. Pass in \texttt{NULL} if failure information is not needed.}
+
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS, all operations succeeded.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE, one or more operations failed. Examine \texttt{PWR_Status* status} to determine the operations that failed. All other operations succeeded.}
+\end{prototype}
+%==============================================================================%
+%int PWR_ObjAttrSetValues( PWR_Obj object, int count, const PWR_AttrName attrs[], const void* values, PWR_Status status );
+\begin{prototype}{ObjAttrSetValues}
+	\longdescription{The \texttt{PWR_ObjAttrSetValues} function is provided to set the value of multiple specified attributes in the  (\texttt{PWR_AttrName attrs[]}) array of a specified object -- \textbf{set multiple attribute values of a single object}.  If the function fails for one or more attributes, the \texttt{PWR_Status status} structure returned can be examined for additional information regarding the failure using \texttt{PWR_StatusPopError} (see page \pageref{func:StatusPopError}).}
+	\returntype{int}
+
+	\parameter{PWR_Obj object}		{\pInput}{The target object.}
+	\parameter{int count}			{\pInput}{The number of elements in the \texttt{attrs[]} and \texttt{*values} arrays.}
+	\parameter{const PWR_AttrName attrs[]}	{\pInput}{The array of target attributes to write. See section \ref{type:AttrName} for a list of available attributes.}
+	\parameter{const void* values}		{\pInput}{The array of values to write, one value for each target attribute. The value to write to attribute \texttt{attrs[i]} is located at address (\texttt{values+(i*8)}).}
+	\parameter{PWR_Status status}		{\pOutput}{Upon \texttt{PWR_RET_FAILURE}, \texttt{status} contains information about each failure that occurred. Pass in \texttt{NULL} if failure information is not needed.}
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS, all operations succeeded.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE, one or more operations failed. Examine \texttt{PWR_Status* status} to determine the operations that failed. All other operations succeeded.}
+\end{prototype}
+%==============================================================================%
+%int PWR_ObjAttrIsValid( PWR_Obj object, PWR_AttrName attr );
+\begin{prototype}{ObjAttrIsValid}
+	\longdescription{The \texttt{PWR_ObjAttrIsValid} function is used to determine if a specified attribute (\texttt{PWR_AttrName attr}) is valid for the specified object.}
+	\returntype{int}
+	\parameter{PWR_Obj object}	{\pInput}{The object that the user is acting on.}
+	\parameter{PWR_AttrName attr}	{\pInput}{The attribute the user wishes to confirm is valid for the specified object.  See the \texttt{PWR_AttrName} type definition in section \ref{type:AttrName}.}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%int PWR_GrpAttrGetValue( PWR_Grp group, PWR_AttrName attr, void* values, PWR_Time ts[], PWR_Status status );
+\begin{prototype}{GrpAttrGetValue}
+	\longdescription{The \texttt{PWR_GrpAttrGetValue} function is provided to get the value of a single specified attribute (\texttt{PWR_AttrName attr}) from all the objects in a specified group (\texttt{PWR_Grp group}) -- \textbf{get a single attribute value from multiple objects}.  The timestamps returned in the \texttt{PWR_Time ts[]} array should accurately represent, and correspond sequentially, with the time each value returned was measured.  If the function fails for one or more attributes, the \texttt{PWR_Status status} structure returned can be examined for additional information regarding the failure using \texttt{PWR_StatusPopError} (see page \pageref{func:StatusPopError}).  \texttt{PWR_GrpAttrGetValue} will continue to attempt to gather values for the entire group, even if an error occurs for a subset of the members of that group.}
+	\returntype{int}
+	\parameter{PWR_Grp group}	{\pInput}{The target group.}
+	\parameter{PWR_Attrgame attr}	{\pInput}{The target attribute to retrieve (get) from each object in the target group. See section \ref{type:AttrName} for a list of available attributes.}
+	\parameter{void* values}	{\pOutput}{The array of attribute values retrieved, one value for each object in the target group. This should point to caller-allocated storage of at least (\texttt{PWR_GrpGetNumObjs() * 8}) bytes. Upon success, the value retrieved for the object at index \texttt{i} within the group will be located at address (\texttt{values+(i*8)}).}
+	\parameter{PWR_Time ts[]}	{\pOutput}{The array of timestamps, one timestamp for each value retrieved. This should point to caller-allocated storage of at least (\texttt{PWR_GrpGetNumObjs()*sizeof(PWR_Time)}). Upon success, the timestamp of the value retrieved for the object at index \texttt{i} within the group will be located at ts[i]. Pass in \texttt{NULL} if timestamps are not needed.}
+	\parameter{PWR_Status status}	{\pOutput}{Upon \texttt{PWR_RET_FAILURE}, \texttt{status} contains information about each failure that occurred. Pass in \texttt{NULL} if failure information is not needed.}
+
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS, all operations succeeded.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE, one or more operations failed. Examine \texttt{PWR_Status* status} to determine the operations that failed. All other operations succeeded.}
+\end{prototype}
+%=============================================================================%
+%int PWR_GrpAttrSetValue( PWR_Grp group, PWR_AttrName attr, const void* value, PWR_Status status );
+\begin{prototype}{GrpAttrSetValue}
+	\longdescription{The \texttt{PWR_GrpAttrSetValue} function is provided to set the value of a single specified attribute (\texttt{PWR_AttrName attr}) of each object in a specified group -- \textbf{set a single attribute value on multiple objects}.  If the function fails for one or more attributes, the \texttt{PWR_Status status} structure returned can be examined for additional information regarding the failure using \texttt{PWR_StatusPopError} (see page \pageref{func:StatusPopError}).  \texttt{PWR_GrpAttrSetValue} will continue to attempt to set values for the entire group, even if an error occurs for a subset of the members of that group.}
+	\returntype{int}
+	\parameter{PWR_Grp group}	{\pInput}{The target group.}
+	\parameter{PWR_AttrName attr}	{\pInput}{The target attribute to set for each object in the target group. See section \ref{type:AttrName} for a list of available attributes.}
+	\parameter{const void* value}	{\pInput}{The pointer to a single 8 byte attribute value to set for each object in the target group.}
+	\parameter{PWR_Status status}	{\pOutput}{Upon \texttt{PWR_RET_FAILURE}, \texttt{status} contains information about each failure that occurred. Pass in \texttt{NULL} if failure information is not needed.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS, all operations succeeded.} 
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE, one or more operations failed. Examine \texttt{PWR_Status* status} to determine the operations that failed. All other operations succeeded.}
+\end{prototype}
+%=============================================================================%
+%int PWR_GrpAttrGetValues( PWR_Grp group, int count, const PWR_AttrName attrs[], void* values, PWR_Time ts[], PWR_Status status );
+\begin{prototype}{GrpAttrGetValues}
+	\longdescription{The \texttt{PWR_GrpAttrGetValues} function is provided to get the value of multiple specified attributes listed in the \texttt{PWR_AttrName attrs[]} array from each object in a specified group -- \textbf{get multiple attribute values from multiple objects}.  The timestamps returned in the \texttt{PWR_Time ts[]} array should accurately represent, and correspond sequentially, with the time each value returned was measured.  If the function fails for one or more attributes, the \texttt{PWR_Status status} structure returned can be examined for additional information regarding the failure using \texttt{PWR_StatusPopError} (see page \pageref{func:StatusPopError}).  \texttt{PWR_GrpAttrGetValues} will continue to attempt to gather values for the entire group, even if an error occurs for a subset of the members or attributes requested in the object group.}
+	\returntype{int}
+	\parameter{PWR_Grp group}		{\pInput}{The target group.}
+	\parameter{int count}			{\pInput}{The number of elements in the \texttt{attrs[]} array.}
+	\parameter{const PWR_AttrName attrs[]}	{\pInput}{he array specifying the set of target attributes to read for each object in the target group. See section \ref{type:AttrName} for a list of available attributes.}
+	\parameter{void* values}		{\pOutput}{The array of attribute values retrieved. This should point to caller-allocated storage of at least (\texttt{PWR_GrpGetNumObjs()*count*8}) bytes.  Upon success, the value read for attribute \texttt{attrs[i]} for the object at index \texttt{j} within the group will be located at address (\texttt{values+(j*count*8)+(i*8)}).}
+	\parameter{PWR_Time ts[]}{Output}{The array of timestamps, one timestamp for each value retrieved. This should point to caller-allocated storage of at least (\texttt{PWR_GrpGetNumObjs()*count*sizeof(PWR_Time)}). Upon success, the timestamp of the value retrieved for attribute \texttt{attrs[i]} for the object at index \texttt{j} within the group will be located at ts[(j*count)+i]. Pass in \texttt{NULL} if timestamps are not needed.}
+	\parameter{PWR_Status status}		{\pOutput}{Upon \texttt{PWR_RET_FAILURE}, \texttt{status} contains information about each failure that occurred. Pass in \texttt{NULL} if failure information is not needed.}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS, all operations succeeded.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE, one or more operations failed. Examine \texttt{PWR_Status* status} to determine the operations that failed. All other operations succeeded.}
+\end{prototype}
+%=============================================================================%
+%int PWR_GrpAttrSetValues( PWR_Grp group, int count, const PWR_AttrName attrs[], const void* values, PWR_Status status );
+\begin{prototype}{GrpAttrSetValues}
+	\longdescription{The \texttt{PWR_GrpAttrSetValues} function is provided to set the value of multiple specified attributes listed in the  (\texttt{PWR_AttrName attrs[]}) array of each object in a specified group -- \textbf{set multiple attribute values on multiple objects}.  If the function fails for one or more attributes, the \texttt{PWR_Status status} structure returned can be examined for additional information regarding the failure using \texttt{PWR_StatusPopError} (see page \pageref{func:StatusPopError}).  \texttt{PWR_GrpAttrSetValues} will continue to attempt to set values for the entire group and requested attributes, even if an error occurs for a subset of the members or attributes of that object group.}
+	\returntype{int}
+	\parameter{PWR_Grp group}		{\pInput}{The target group.}
+	\parameter{int count}			{\pInput}{The number of elements in the \texttt{attrs[]} and \texttt{*values} arrays.}
+	\parameter{const PWR_AttrName attrs[]}	{\pInput}{The array specifying the set of target attributes to set for each object in the target group. See section \ref{type:AttrName} for a list of available at     tributes.}
+	\parameter{const void* values}		{\pInput}{The array of attribute values to set for each object in the group. The value to write to attribute \texttt{attrs[i]} of each object is located at address (\texttt{values+(i*8)}).}
+	\parameter{PWR_Status status}		{\pOutput}{Upon \texttt{PWR_RET_FAILURE}, \texttt{status} contains information about each failure that occurred. Pass in \texttt{NULL} if failure information is not needed.}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS, all operations succeeded.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE, one or more operations failed. Examine \texttt{PWR_Status* status} to determine the operations that failed. All other operations succeeded.}
+\end{prototype}
+%=============================================================================%
+%==============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+\section{Metadata Functions}\label{sec:METADATA}
+
+The metadata functions provide an interface for getting more descriptive
+information about an object or attribute, such as estimated measurement
+accuracy or the list of valid values for a given attribute.  This
+information is often useful for getting a better understanding of the
+meaning of objects and attributes and how to interpret the values read
+from attributes.  While most metadata is read-only information, some
+metadata is potentially configurable, such as the underlying power
+sampling rate used to calculate \texttt{PWR_ATTR_ENERGY} values.
+
+Table~\ref{table:MasterMetadataTable} on page~\pageref{type:AttrStat} 
+lists the available types of metadata. Not all of the metadata items
+listed will be available for every object and attribute pair.  The exact
+set is dependent on the capabilities of the underlying hardware and
+Power API implementation. If a requested metadata item is not available
+a \texttt{PWR_RET_NO_ATTRIB} error is returned at runtime.
+
+The majority
+of metadata items will require that both an object instance and
+attribute name pair be specified, but a few may be defined for object
+instances alone.  For example, the metadata strings \texttt{PWR\_MD\_NAME},
+\texttt{PWR\_MD\_DESC}, and \texttt{PWR\_MD\_VENDOR\_INFO} may be
+available for individual object instances, with no associated attribute
+name specified.  In these cases, the attribute name requested should
+be set to \texttt{PWR_ATTR_NOT_SPECIFIED}. One important use case for
+these informational strings, especially the \texttt{PWR\_MD\_VENDOR\_INFO}
+string, is for a Power API user to capture these strings with each run
+to record configuration and provenance information.  For example, a
+user may chose to log the \texttt{PWR\_MD\_VENDOR\_INFO} string for
+the top-level platform object in the output of each run.
+
+The metadata interface consists of three functions. The
+\texttt{PWR_ObjAttrGetMeta} and \texttt{PWR_ObjAttrSetMeta} functions allow
+metadata values to be retrieved and set, respectively. The third function,
+\texttt{PWR_MetaValueAtIndex}, provides a way to enumerate through an attribute's
+list of available values.  This is useful for attributes that have a small, well-defined
+set of discrete values (e.g., \texttt{PWR\_ATTR\_PSTATE}). It is expected that where 
+a set of discrete values can be described in a logical order that the index ordering
+is from smallest (lowest) to largest (highest) value. The remainder of
+this section describes the metadata functions in more detail.
+
+%
+%==============================================================================%
+%int PWR_ObjAttrGetMeta( PWR_Obj obj, PWR_AttrName attr, PWR_MetaName meta, void* value );
+\begin{prototype}{ObjAttrGetMeta}
+	\longdescription{The \texttt{PWR_ObjAttrGetMeta} function returns the requested metadata item for the specified object or object and attribute name pair.  The caller must allocate enough storage to hold the returned metadata value and pass a pointer to the storage in the \texttt{value} argument.  The required size can be determined by consulting the type column of Table~\ref{table:MasterMetadataTable}.  In the case of string metadata items (i.e., type \texttt{char *}), the required string length can be determined by getting the appropriate length metadata item, which is the original metadata name with the \texttt{_LEN} suffix added.  For example, the required string length for the \texttt{PWR_MD_VENDOR_INFO} string can be determined by retrieving the \texttt{PWR_MD_VENDOR_INFO_LEN} metadata item.}
+	\parameter{PWR_Obj obj}		{\pInput}{The target object.}
+	\parameter{iPWR_AttrName attr}	{\pInput}{The target attribute. See the \texttt{PWR_AttrName} type definition in Section \ref{type:AttrName} for the list of possible attributes. If object-only metadata is being requested, this argument should be set to \texttt{PWR_ATTR_NOT_SPECIFIED}.}
+	\parameter{PWR_MetaName meta}	{\pInput}{The target metadata item to get. See the \texttt{PWR_MetaName} type definition in Section \ref{type:MetaName} for the list of possible metadata items, with detailed descriptions provided in Table~\ref{table:MasterMetadataTable}.}
+	\parameter{void* value}		{\pOutput}{Pointer to the caller allocated storage to hold the value of the requested metadata item. See Table~\ref{table:MasterMetadataTable} for type information.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_NO_ATTRIB} 	{The attribute specified is not implemented.}
+	\returnval{PWR_RET_NO_META} 	{The metadata specified is not implemented.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%
+%==============================================================================%
+%int PWR_ObjAttrSetMeta( PWR_Obj obj, PWR_AttrName attr, PWR_MetaName meta, const void* value );
+\begin{prototype}{ObjAttrSetMeta}
+	\longdescription{The \texttt{PWR_ObjAttrSetMeta} function sets the specified metadata item for the target object or object and attribute name pair.  The caller must pass a pointer to the new value for the specified metadata item in the \texttt{value} argument.  The required type for the value can be determined by consulting the type column of Table~\ref{table:MasterMetadataTable}.  In the case of string metadata items (i.e., type \texttt{char *}), the maximum string length can be determined by getting the appropriate length metadata item, which is the original metadata name with the \texttt{_LEN} suffix added.  For example, the maximum string length for the \texttt{PWR_MD_VENDOR_INFO} string can be determined by retrieving the \texttt{PWR_MD_VENDOR_INFO_LEN} metadata item.}
+	\returntype{int}
+	\parameter{PWR_Obj obj}		{\pInput}{The target object.}
+	\parameter{PWR_AttrName attr}	{\pInput}{The target attribute. See the \texttt{PWR_AttrName} type definition in Section \ref{type:AttrName} for the list of possible attributes. If object-only metadatais being set, this argument should be set to \texttt{PWR_ATTR_NOT_SPECIFIED}.}
+	\parameter{PWR_MetaName meta}	{\pInput}{The target metadata item to set. See the \texttt{PWR_MetaName} type definition in Section \ref{type:MetaName} for the list of possible metadata items, with detailed descriptions provided in Table~\ref{table:MasterMetadataTable}.}
+	\parameter{const void* value}	{\pInput}{Pointer to the new value for the metadata item. See Table~\ref{table:MasterMetadataTable} for type information.}
+	\returnval{PWR_RET_NO_ATTRIB} 	{The attribute specified is not implemented.}
+	\returnval{PWR_RET_NO_META} 	{The metadata specified is not implemented.}
+	\returnval{PWR_RET_READ_ONLY} 	{The metadata specified is not settable.}
+	\returnval{PWR_RET_BAD_VALUE} 	{The value specified is not valid.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%
+%==============================================================================%
+%int PWR_MetaValueAtIndex( PWR_Obj obj, PWR_AttrName attr, unsigned int index, void* value, char* value_str ); \end{lstlisting}
+\begin{prototype}{MetaValueAtIndex}
+	\longdescription{The \texttt{PWR_MetaValueAtIndex} function allows the available values for a given attribute to be enumerated.  It is assumed that the set of valid values is static and has size equal to the value returned by the \texttt{PWR_MD_NUM} metadata item.  Once the value of \texttt{PWR_MD_NUM} is known, \texttt{PWR_MetaValueAtIndex()} can be called repeatedly with index from 0 to \texttt{PWR_MD_NUM} - 1 to retrieve the list of valid values for the target attribute.  Each call will return the value at the specified index as well as a human-readable string representing the value in human readable format.  If an attribute is not enumerable, then \texttt{PWR_MD_NUM} will return 0.  In general any attribute that does not have a small set of discrete valid values will return 0 when \texttt{PWR_MD_NUM} is requested, to indicate that the attribute is not enumerable.}
+	\returntype{int}
+	\parameter{PWR_Obj obj}		{\pInput}{The target object.}
+	\parameter{PWR_AttrName attr}	{\pInput}{The target attribute. See the \texttt{PWR_AttrName} type definition in Section \ref{type:AttrName} for the list of possible attributes.}
+	\parameter{unsigned int index}	{\pInput}{The index of the metadata item value to look up. The \texttt{PWR\_MD\_NUM} metadata item returns the number of possible values, indexed from 0 to \texttt{PWR\_MD\_NUM} - 1.}
+	\parameter{void* value}		{\pOutput}{Pointer to the caller allocated storage to hold the value of the requested metadata item value. See Table~\ref{table:MasterMetadataTable} for type inform     ation. The storage must be sized appropriately for the metadata value type. If the value is not required, this argument should be set to NULL.}
+	\parameter{char* value\_str}	{\pOutput}{Pointer to the caller allocated storage to hold the human-readable C-style NULL-terminated ASCII string representing the metadata item value. The storage passed in must have size in bytes of at least the value returned by the \texttt{PWR\_MD\_VALUE\_LEN} metadata item. If the string representation is not required this argument should be set to NULL.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_NO_ATTRIB} 	{The attribute specified is not implemented.}
+	\returnval{PWR_RET_BAD_INDEX} 	{The index specified is not valid.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+
+\section{Statistics Functions}\label{sec:StatisticsFunctions}
+%
+
+The statistics functions provide an interface to generate statistics related to specific attributes of an object or group. 
+The interface allows for generating statistics somewhat real-time or mining historic statistics, assuming that the necessary data is retained.
+The interface for collecting historic statistics is much more straight forward and can be accomplished with a single call, \texttt{PWR_ObjGetStat} for a single object and \texttt{PWR_GrpGetStats} for a group of objects. 
+%The \texttt{PWR_ObjGetStat} and \texttt{PWR_GrpGetStats} functions are used to collect historic statistic information.
+The interface for collecting real-time statistics is designed to interface with hardware or layers of software that require a notification of when information collection should begin and when it can be terminated. 
+The requested statistic can then be mined for this window of time, even while the window remains open. 
+The sequence of calls for mining real-time statistics is as follows.
+The user creates a statistic object using the \texttt{PWR_ObjCreateStat} call when collecting a statistic on a single object or the \texttt{PWR_GrpCreateStat} call when the statistic is to be collected on a group of objects.
+Basically, a tuple of information is provided, an object or group, the attribute (\texttt{PWR_ATTR_POWER} for example, see page \pageref{type:AttrName}) that the user would like the statistic for and the statistic (\texttt{PWR_ATTR_STAT_AVG} for example, see page \pageref{type:AttrStat}).
+Notice that the statistic to be collected is part of the required parameters for creating a statistics object, while it is provided at the time of retrieval when collecting historic statistics.
+The reason for this approach is that the underlying hardware or software layer needs to understand what information to start collecting to support the requested statistic. 
+Buffers are typically a limiting factor in the capabilities that can be supported by an implementation. 
+Requiring an implementation to collect the data necessary for any potential statistic could require a great deal of space.
+Once a statistics object is created (for an object or a group) the user indicates the beginning of the window by calling \texttt{PWR_StatStart}.
+Once \texttt{PWR_StatStart} is called the user can retrieve the statistic information associated with the statistics object by calling \texttt{PWR_StatGetValue}, when the statistics object was created for a single object, or \texttt{PWR_StatGetValues}, when the statistics object was created for a group of objects.
+The start time is always the time that the user calls \texttt{PWR_StatStart} on the statistics object.
+The user can call \texttt{PWR_StatGetValue} or \texttt{PWR_StatGetValues} as many times as they wish prior to calling \texttt{PWR_StatStop}.
+If \texttt{PWR_StatStop} has not been called, the stop time is the time the user calls \texttt{PWR_StatGetValue} or \texttt{PWR_StatGetValues}.
+Once \texttt{PWR_StatStop} has been called the stop time if fixed for that statistics object. 
+Essentially, the implementation at this time has everything it needs to calculate the return value or values for \texttt{PWR_StatGetValue} or \texttt{PWR_StatGetValues}.
+The user is responsible for checking the start and stop times returned along with the statistics value. 
+The start and stop times may be different for two reasons.
+In the normal case, the implementation is required to return start and stop times that accurately represent when the actual data was sampled that was used in calculting the statistics value.
+As such, the returned values could differ from the times set by the real-time statistics functions.
+In the abnormal case, the start time, and possibly the stop time, could differ more significantly from the times \texttt{PWR_StatStart} and \texttt{PWR_StatStop} were called or the stop time determined by calling either of the \texttt{PWR_StatGetValue} or \texttt{PWR_StatGetValues} functions before \texttt{PWR_StatStop} has been called. 
+If this occurs, due to a resource exhaustion issue for example, the implementation is required to either return a failure or return a statistics value and the accurate time values representing the statistics value returned along with a warning indicating that the time window has been truncated. 
+A truncated time-frame is still required to as closely as possible represent the data collection time the statistic is generated based on.
+It is then up to the user to determine if the value returned is useful or not.
+Statistics objects can be re-used by calling \texttt{PWR_StatClear}, which indicates to the implementation that any data retained associated with the statistic object can be released. 
+To begin another statistics window the user repeats the process just outlined.
+When the user is done with a statistics object they should call \texttt{PWR_StatDestroy}.
+
+%==============================================================================%
+%int PWR_ObjGetStat( PWR_Obj object, PWR_AttrName name, PWR_AttrStat statistic, PWR_TimePeriod* statTime, double* value ); 
+\begin{prototype}{ObjGetStat}
+	\longdescription{The \texttt{PWR_ObjGetStat} function is used to retrieve a historic statistic using an object, attribute, statistic tuple.  Note that the \texttt{PWR_ObjGetStat} call operates on single objects only, not groups of objects.  The \texttt{PWR_ObjGetStat} is a standalone call is used for historic data collection only.  To retrieve a statistic from a group of objects, the \texttt{PWR_GrpGetStats} call on page \pageref{func:GrpGetStats} should be used.}
+	\parameter{PWR_Obj object}		{\pInput}{The object to collect the statistic for (part of the object, attribute statistic triple}
+	\parameter{PWR_AttrName name}		{\pInput}{The attribute to act on, see the \texttt{PWR_AttrName} type definition in section \ref{type:AttrName}.}
+	\parameter{PWR_AttrStat statistic}	{\pInput}{ified attribute, see \texttt{PWR_AttrStat} type definition in section \ref{sec:StatisticTypeDefinitions}.}
+	\parameter{PWR_TimePeriod* statTime}	{\pInputOutput}{Time structure that initially must contain the times (start, stop and instant if appropriate) requested by the user (Input) and the times, possibly      different, representing the period of the statistic data returned (Output), see page \pageref{type:TimePeriod}.}
+	\parameter{double* value}		{\pOutput}{pointer to space (double) to store the statistic}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%int PWR_GrpGetStats( PWR_Grp group, PWR_AttrName name, PWR_AttrStat statistic, PWR_TimePeriod* statTime double values[], PWR_TimePeriod statTimes[] ); 
+\begin{prototype}{GrpGetStats}
+	\longdescription{The \texttt{PWR_GrpGetStats} function is used to retrieve historic statistic for a group of objects.  Each object in the group is combined with the attribute and statistic specified to form the object, attribute, statistic tuple.  Note that the \texttt{PWR_GrpGetStats} call operates on one or more objects in a group.  The \texttt{PWR_GrpGetStats} is a standalone call is used for historic data collection only.  To retrieve a statistic from a single object, the \texttt{PWR_ObjGetStat} call on page \pageref{func:ObjGetStat} should be used.}
+	\returntype{int}
+	\parameter{PWR_Grp group}		{\pInput}{The group to collect the statistic for. Each object in the group forms the object, attribute, statistic triple.}
+	\parameter{PWR_AttrName name}		{\pInput}{The attribute to act on, see the \texttt{PWR_AttrName} type definition in section \ref{type:AttrName}.}
+	\parameter{PWR_AttrStat statistic}	{\pInput}{The desired statistic for the specified attribute, see \texttt{PWR_AttrStat} type definition in section \ref{sec:StatisticTypeDefinitions}.}
+	\parameter{PWR_TimePeriod* statTime}	{\pInput}{Time structure that must contain the times (start, stop and instant if appropriate) requested by the user. Note this is Input only, see page \pageref{type: TimePeriod}.}
+	\parameter{double values[]}		{\pOutput}{Space (of double) allocated by user to store an array of statistic values}
+	\parameter{PWR_TimePeriod statTimes[]}	{\pOutput}{Space allocated by user to hold an array of time structures representing the actual times associated with each statistic value returned in values[], see      page \pageref{type:TimePeriod}.}
+	\returnval{PWR_RET_SUCCESS} 		{SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%int PWR_ObjCreateStat( PWR_Obj object, PWR_AttrName name, PWR_AttrStat statistic, PWR_Stat* stat); 
+\begin{prototype}{ObjCreateStat}
+	\longdescription{The \texttt{PWR_ObjCreateStat} function is used to create a statistics object that will be used for real-time statistics gathering operations for a single object.  The user specifies the \textbf{object}, attribute, statistic tuple that all subsequent requests using the statistics object created will be based on.  Note, this call is not used for historic statistic gathering, see \texttt{PWR_ObjGetStat} on page \pageref{func:ObjGetStat} and \texttt{PWR_GrpGetStats} on page \pageref{func:GrpGetStats}.}
+	\returntype{int}
+	\parameter{PWR_Obj object}		{\pInput}{The object to act on.}
+	\parameter{PWR_AttrName name}		{\pInput}{The attribute to act on, see the \texttt{PWR_AttrName} type definition in section \ref{type:AttrName}.}
+	\parameter{PWR_AttrStat statistic}	{\pInput}{The desired statistic for the specified attribute, see \texttt{PWR_AttrStat} type definition in section \ref{sec:StatisticTypeDefinitions}.}
+	\parameter{PWR_Stat* stat}		{\pOutput}{The stat for the object, attribute, statistic triple specified.}
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS, valid stat is created.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_GrpCreateStat( PWR_Grp group, PWR_AttrName name, PWR_AttrStat statistic, PWR_Stat* stat); 
+\begin{prototype}{GrpCreateStat}
+	\longdescription{The \texttt{PWR_GrpCreateStat} function is used to create a statistics object that will be used for real-time statistics gathering operations for a group of objects.  The user specifies the \textbf{group}, attribute, statistic tuple that all subsequent requests using the statistics object created will be based on.  Note, this call is not used for historic statistic gathering, see \texttt{PWR_ObjGetStat} on page \pageref{func:ObjGetStat} and \texttt{PWR_GrpGetStats} on page \pageref{func:GrpGetStats}.}
+	\returntype{int}
+	\parameter{PWR_Grp group}		{\pInput}{The group to act on.}
+	\parameter{PWR_AttrName name}		{\pInput}{The attribute to act on, see the \texttt{PWR_AttrName} type definition in section \ref{type:AttrName}.}
+	\parameter{PWR_AttrStat statistic}	{\pInput}{The desired statistic for the specified attribute, see \texttt{PWR_AttrStat} type definition in section \ref{sec:StatisticTypeDefinitions}.}
+	\parameter{PWR_Stat* stat}		{\pOutput}{The stat for the group, attribute, statistic triple specified.}
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS, valid stat is created.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_StatStart( PWR_Stat statObj ); 
+\begin{prototype}{StatStart}
+	\longdescription{The \texttt{PWR_StatStart} function is used to indicate to a device or software layer to start the window of time that the statistic requested will be calculated over.  The \texttt{PWR_StatStart} function is used for real-time statistics gathering only.}
+	\returntype{int}
+	\parameter{PWR_Stat statObj}	{\pInput}{The statistics object to begin collecting the specified statistic for (specified in \texttt{PWR_ObjCreateStat} or \texttt{PWR_GrpCreateStat}).}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_StatStop( PWR_Stat statObj ); 
+\begin{prototype}{StatStop}
+	\longdescription{The \texttt{PWR_StatStop} function is used to indicate to a device or software layer to stop the window of time that the statistic requested will be calculated over.  The \texttt{PWR_StatStop} function is used for real-time statistics gathering only.}
+	\returntype{int}
+	\parameter{PWR_Stat statObj}{\pInput}{The statistics object to stop collecting the specified statistic for (specified in \texttt{PWR_ObjCreateStat} or \texttt{PWR_GrpCreateStat}).}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_StatClear( PWR_Stat statObj ); 
+\begin{prototype}{StatClear}
+	\longdescription{The \texttt{PWR_StatClear} function is used to indicate to a device or software layer to clear or reset the window of time that the statistic requested will be calculated over.  The clear effectively restarts the window, so there is no need to call \texttt{PWR_StatStart} again.  The \texttt{PWR_StatClear} function is used for real-time statistics gathering only.}
+	\returntype{int}
+	\parameter{PWR_Stat statObj}	{\pInput}{The statistics object to clear (effectively reset) for the specified statistic (specified in \texttt{PWR_ObjCreateStat} or \texttt{PWR_GrpCreateStat}).}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_StatGetValue( PWR_Stat statObj, double* value, PWR_TimePeriod* statTimes ); 
+\begin{prototype}{StatGetValue}
+	\longdescription{The \texttt{PWR_StatGetValue} function is used to retrieve the statistic and related time stamp information from the statistics object created using \texttt{PWR_ObjCreateStat}.  Note that the \texttt{PWR_StatGetValue} call operates on single objects only, not groups of objects.  The start time for the window the statistic is calculated over is set by calling \texttt{PWR_StatStart}.  The stop time is set by either calling this function, \texttt{PWR_StatGetValue}, or set for the statistics object by calling \texttt{PWR_StatStop}.  Each time \texttt{PWR_StatGetValue} is called prior to calling \texttt{PWR_StatStop} the time \texttt{PWR_StatGetValue} is called is used as the stop time for the statistics calculation.  From the specification standpoint, there is no limit to how often \texttt{PWR_StatGetValue} can be called.  The start, stop and, depending on the statistic requested, the instant time values returned should as accurately as possible represent the time-stamps of the data used in the statistics value returned.  The \texttt{PWR_StatGetValue} function is used for real-time statistics gathering only.  If a single value return is desired for a group of objects, the \texttt{PWR_StatGetReduce} call on page \pageref{func:StatGetReduce} should be used.}
+	\returntype{int}
+	\parameter{PWR_Stat statObj}		{\pInput}{The statistics object to collect the statistic for (the object, attribute stat triple is specified in \texttt{PWR_ObjCreateStat}).}
+	\parameter{double* value}		{\pOutput}{pointer to space (double) to store the statistic}
+	\parameter{PWR_TimePeriod* statTimes}	{\pOutput}{Time structure that contains the timestamps pertinent to the specific statistic value, see page \pageref{type:TimePeriod}.}
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE.}
+	\returnval{PWR_RET_WARN_TRUNC} 		{When the time window has been truncated by the implementation, start and stop times may differ significantly from those set by the interface.} 
+\end{prototype}
+ %==============================================================================%
+%int PWR_StatGetValues( PWR_Stat statObj, double values[], PWR_TimePeriod statTimes[] ); 
+\begin{prototype}{StatGetValues}
+	\longdescription{The \texttt{PWR_StatGetValues} function is used to retrieve the statistic and related time stamp information from the statistics object(s) created using \texttt{PWR_GrpCreateStat}.  Note that the \texttt{PWR_StatGetValues} call operates on one or more objects in the group specified in the \texttt{PWR_GrpCreateStat} call.  The start time for the window the statistic is calculated over is set by calling \texttt{PWR_StatStart}.  The stop time is set by either calling this function, \texttt{PWR_StatGetValues}, or set for the statistics object by calling \texttt{PWR_StatStop}.  Each time \texttt{PWR_StatGetValues} is called prior to calling \texttt{PWR_StatStop} the time \texttt{PWR_StatGetValues} is called is used as the stop time for the statistics calculation.  From the specification standpoint, there is no limit to how often \texttt{PWR_StatGetValues} can be called.  The start, stop and, depending on the statistic requested, the instant time values for each individual object returned (in the \texttt{Output} \texttt{PWR_TimePeriod} structure) should as accurately as possible represent the time-stamps of the data used in the statistics values returned.  The \texttt{PWR_StatGetValues} function is used for real-time statistics gathering only.  If a single value return is desired for a group of objects, the \texttt{PWR_StatGetReduce} call on page \pageref{func:StatGetReduce} should be used.}
+	\returntype{int}
+	\parameter{PWR_Stat statObj}		{\pInput}	{The statistics object to collect the statistic for (the group, attribute stat triple is specified in \texttt{PWR_GrpCreateStat}).}
+	\parameter{double values[]}		{\pOutput}	{Space allocated by user to hold array of values (statistics).}
+	\parameter{PWR_TimePeriod statTimes[]}	{\pOutput}	{Space allocated by user to hold array of time structures that contains the timestamps pertinent to each specific statistic value, see page \pageref{type     :TimePeriod}}
+	
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE.}
+	\returnval{PWR_RET_WARN_TRUNC} 		{When the time window has been truncated by the implementation, start and stop times may differ significantly from those set by the interface.} 
+\end{prototype}
+%==============================================================================%
+%int PWR_StatGetReduce( PWR_Stat statObj, PWR_AttrStat reduceOp, int* index, double* result, PWR_Time* instant);
+\begin{prototype}{StatGetReduce}
+	\longdescription{The \texttt{PWR_StatGetReduce} function is used to reduce a set of per-object statistics down into a single returned value.  The inputs are a \texttt{PWR_Stat} object, and a reduction operation.  The reduction operation can be thought of as occurring in two phases.  In the first phase, a statistic is calculated for each object associated with the input \texttt{PWR_Stat}, one statistic value per object.  The objects, target attribute, and desired statistic to calculate are specified when the \texttt{PWR_Stat} is created.  In the second phase, the set of statistic values calculated in the first phase are combined into a single result value.  How this occurs is determined by the reduction operation that was specified by the caller.  For example, the \texttt{PWR_ATTR_STAT_AVG} reduction operation returns the average of the per-object statistics calculated in the first phase.  The start time for the window the statistic is calculated over is set by calling \texttt{PWR_StatStart}.  The stop time used for the statistics calculated in the first phase are based on the time this function is called, or set for the statistics object from a previous call to  \texttt{PWR_StatStop}.  \texttt{PWR_StatGetReduce} is provided such that optimizations may be possible when gathering the statistics of each member in a group of objects.  An example of such an operation would be calculating an average, where gathering the values is done through a tree topology overlay network, where averages can be calculated at each parent of multiple children in the tree.  Note that the implementation of \texttt{PWR_StatGetReduce} can be done in its more simplistic form by calling \texttt{PWR_StatGetValues} and performing the required operation on the returned set of values to return the requested reduction operation.}
+	\returntype{int}
+	\parameter{PWR_Stat statObj}		{\pInput}{The statistics object to collect the statistic for (the object group, attribute, stat triple is specified in \texttt{PWR_GrpCreateStat}).}
+	\parameter{PWR_AttrStat reduceOp}	{\pInput}{The reduction operation to perform.}
+	\parameter{int* index}			{\pOutput}{The index of the object in the statObj's associated object group that provided the reduction result. This value is only set for reduction operations where it makes sense, such as PWR_ATTR_STAT_MIN and PWR_ATTR_STAT_MAX.}
+	\parameter{double* result}		{\pOutput}{The result of the reduction operation, which is always a single double value.}
+	\parameter{PWR_Time* instant}		{\pOutput}{For statistics where a point in time that the value occured is valid (e.g. max and min), this is the timestamp when that value was observed.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+	\returnval{PWR_RET_WARN_TRUNC} 	{When the time window has been truncated by the implementation.}
+\end{prototype}
+%==============================================================================%
+%int PWR_GrpGetReduce( PWR_Grp group, PWR_AttrName name, PWR_AttrStat statistic, PWR_AttrStat reduceOp, PWR_TimePeriod statTime, int* index, double* result, PWR_TimePeriod* resultTime);
+\begin{prototype}{GrpGetReduce}
+	\longdescription{The \texttt{PWR_GrpGetReduce} function is used to reduce a set of per-object statistics down into a single returned value.  Unlike \texttt{PWR_StatGetReduce} that is used for real time statistics gathering, \texttt{PWR_GrpGetReduce} is meant to gather statistics for historical data.  Therefore, this call is much like the \texttt{PWR_GrpGetStats} function, with an added reduction.  The inputs are a \texttt{PWR_Grp} object, an attribute, a statistic, a reduction operation and a time period.  The reduction operation can be thought of as occurring in two phases.  In the first phase, a statistic is calculated for each object associated with the input group, one statistic value per object.  The objects, target attribute, and desired statistic to calculate are specified as inputs to this function..  In the second phase, the set of statistic values calculated in the first phase are combined into a single result value.  How this occurs is determined by the reduction operation that was specified by the caller.  For example, the \texttt{PWR_ATTR_STAT_AVG} reduction operation returns the average of the per-object statistics calculated in the first phase.  Upon success, the returned \texttt{PWR_TimePeriod} structure will have its time fields set to the timestamps that are most closely associated with the result of the reduction operation.  For certain reduction operations, some timestamps in the returned \texttt{PWR_TimePeriod} may not be valid output.  For example, in the case of a averaging reduction, an associated ``instant'' timestamp is not a useful value.  For minimum and maximum operations, the ``instant'' timestamp is useful and will represent the time at which the maximum or minimum was observed.  In all cases the start and stop timestamps in the \texttt{PWR_TimePeriod} will represent the time window over which the the value was calculated.  \texttt{PWR_GrpGetReduce} is provided such that optimizations may be possible when gathering the statistics of each member in a group of objects.  An example of such an operation would be calculating an average, where gathering the values is done through a tree topology overlay network, where averages can be calculated at each parent of multiple children in the tree.  Note that the implementation of \texttt{PWR_GrpGetReduce} can be done in its more simplistic form by calling \texttt{PWR_GrpGetStats} and performing the required operation on the returned set of values to return the requested reduction operation.}
+	\returntype{int}
+	\parameter{PWR_Grp group}		{\pInput}{The group to collect the statistic for. Each object in the group forms the object, attribute, statistic triple.}
+	\parameter{PWR_AttrName name}		{\pInput}{The attribute to act on, see the \texttt{PWR_AttrName} type definition in section \ref{type:AttrName}.}
+	\parameter{PWR_AttrStat statistic}	{\pInput}{The desired statistic for the specified attribute, see \texttt{PWR_AttrStat} type definition in section \ref{sec:StatisticTypeDefinitions}.}
+	\parameter{PWR_AttrStat reduceOp}	{\pInput}{The reduction operation to perform.}
+	\parameter{PWR_TimePeriod statTime}	{\pInput}{Time structure that must contain the times (start, stop and instant if appropriate) requested by the user. Note this is Input only, see page \pageref{type:TimePeriod}.}
+	\parameter{int* index}			{\pOutput}{The index of the object in the statObj's associated object group that provided the reduction result. This value is only set for reduction operations where it makes sense, such as PWR_ATTR_STAT_MIN and PWR_ATTR_STAT_MAX.}
+	\parameter{double* result}		{\pOutput}{The result of the reduction operation, which is always a single double value.}
+	\parameter{PWR_TimePeriod* resultTime}	{\pOutput}{The time period that the results are valid for. Note that this may diverge from the input time period if results for the exact time period are not available. This time period will also contain the instant that the statistic was observed for cases where this makes sense, such as PWR_ATTR_STAT_MIN and PWR_ATTR_STAT_MAX.}
+	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+	\returnval{PWR_RET_WARN_TRUNC} 	{When the time window has been truncated by the implementation.} 
+\end{prototype}
+
+%==============================================================================%
+%int PWR_StatDestroy( PWR_Stat statObj ); 
+\begin{prototype}{StatDestroy}
+	\longdescription{The \texttt{PWR_StatDestroy} function is used to destroy (clean up) the statistics pointer created using \texttt{PWR_ObjCreateStat} or \texttt{PWR_GrpCreateStat}.}
+	\returntype{int}
+	\parameter{PWR_Stat statObj}{\pInput}{The statistics object to destroy (clean up)}
+	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+
+\section{Version Functions}\label{sec:VersionFunctions}
+
+The \texttt{PWR_GetMajorVersion} and \texttt{PWR_GetMinorVersion} functions are used to get the major and minor portions of the specification version supported by the implementation. 
+Users can make decisions regarding available functionality based on the version number supported.
+
+%==============================================================================%
+%int PWR_GetMajorVersion( ); 
+\begin{prototype}{GetMajorVersion}
+	\longdescription{The \texttt{PWR_GetMajorVersion} function is used to get the major version number portion of the version number of the specification supported by the implementation.}
+	\returntype{int}
+	\returnval{int} 		{Upon SUCCESS, integer representation of major portion of version number}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE}
+\end{prototype}
+%==============================================================================%
+%int PWR_GetMinorVersion( ); 
+\begin{prototype}{GetMinorVersion}
+	\longdescription{The \texttt{PWR_GetMinorVersion} function is used to get the minor version portion of the version number of the specification supported by the implementation.}
+	\returntype{int}
+	\returnval{int}             {Upon SUCCESS, integer representation of minor portion of version number.}
+	\returnval{PWR_RET_FAILURE} {Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+\section{Big List of Attributes}\label{sec:BLOA}
+
+The following is the master list of Attributes available to the user.
+The attributes valid for specific interfaces are listed in the appropriate section in Chapter~\ref{chap:Interfaces}. 
+
+\begin{attributetable}{Complete list of all supported attributes}{table:MasterAttributeTable}
+\aPstateDesc
+\aCstateDesc
+\aCstateLimitDesc
+\aSstateDesc
+\aCurrentDesc
+\aVoltageDesc
+\aPowerDesc
+\aMinPowerDesc
+\aMaxPowerDesc
+\aFreqDesc
+\aFreqLimitMinDesc
+\aFreqLimitMaxDesc
+\aEnergyDesc
+\aTempDesc
+\aOSIdDesc
+\aThrottledIdDesc
+\aThrottledCountIdDesc
+\aGovDesc
+\end{attributetable}
+
+%==============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+%=============================================================================%
+\section{Big List of Metadata}\label{sec:BLOM}
+
+%\laros{Table needs work. Reduced Metadata to MD but the names are still really long? Probably could use an abbreviation for same as attribute.}
+\begin{attributetable}{Complete List of All Metadata Names}{table:MasterMetadataTable}
+\mNum
+\mMin
+\mMax
+\mPrecision
+\mAccuracy
+\mUpdateRate
+\mSampleRate
+\mTimeWindow
+\mTSLatency
+\mTSAccuracy
+\mMaxLen
+\mNameLen
+\mName
+\mDescLen
+\mDesc
+\mValueLen
+\mVendorInfoLen
+\mVendorInfo
+\mMeasureMethod
+\end{attributetable}
+
+%%%\begin{center}
+%%%%\begin{longtable}{ | p{5.0cm} | p{1.2cm} | p{1.6cm} | p{6.2cm} |}
+%%%\begin{longtable}{ | p{5.0cm} | p{1.0cm} | p{2.0cm} | p{7.0cm} |}
+%%%\caption{Complete List of All Metadata Names}\label{table:MasterMetadataTable}\\
+%%%
+%%%\hline 
+%%%\multicolumn{1}{|c|}{\textbf{Metadata}} & \multicolumn{1}{c|}{\textbf{Set}}        & \multicolumn{1}{c|}{\textbf{Type}} & \multicolumn{1}{c|}{\textbf{Description}} \\
+%%%\multicolumn{1}{|c|}{  }                                    & \multicolumn{1}{c|}{\textbf{and/or}}   & \multicolumn{1}{c|}{(SaA = Same}                    & \multicolumn{1}{c|}{  }           \\     
+%%%\multicolumn{1}{|c|}{  }                                    & \multicolumn{1}{c|}{\textbf{Get}}   & \multicolumn{1}{c|}{as Attribute)}                    & \multicolumn{1}{c|}{  }           \\                                 
+%%%\hline
+%%%\hline
+%%%\endfirsthead
+%%%
+%%%\multicolumn{4}{c}%
+%%%{{ \tablename\ \thetable{} -- continued from previous page}} \\
+%%%\hline
+%%%\multicolumn{1}{|c|}{\textbf{Metadata}} & \multicolumn{1}{c|}{\textbf{Set}}        & \multicolumn{1}{c|}{\textbf{Type}} & \multicolumn{1}{c|}{\textbf{Description}} \\
+%%%\multicolumn{1}{|c|}{  }                                    & \multicolumn{1}{c|}{\textbf{and/or}}   & \multicolumn{1}{c|}{(SaA = Same}                    & \multicolumn{1}{c|}{  }           \\     
+%%%\multicolumn{1}{|c|}{  }                                    & \multicolumn{1}{c|}{\textbf{Get}}   & \multicolumn{1}{c|}{as Attribute)}                    & \multicolumn{1}{c|}{  }           \\                                 
+%%%\hline
+%%%\hline
+%%%\endhead
+%%%
+%%%\hline \multicolumn{4}{|r|}{{Continued on next page}} \\ \hline
+%%%\endfoot
+%%%
+%%%\hline \hline
+%%%\endlastfoot  
+%%%
+%%%  \hline
+%%%\texttt{PWR\_MD\_NUM}                      & Get     & uint64_t   & Number of values supported. This is only relevant for attributes with a discrete set of values (e.g., \texttt{PWR\_ATTR\_PSTATE}). Other attributes return 0. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_MIN}                      & Get     & SaA        & Minimum value supported. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_MAX}                      & Get     & SaA        & Maximum value supported. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_PRECISION}                & Get     & uint64_t   & Number of significant digits in values. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_ACCURACY}                 & Get     & double     & Estimated percent error +/- of measured vs. actual values. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_UPDATE\_RATE}             & Set/Get & double     & Rate values become visible to user, in updates per second. Getting or setting a value at a rate higher than this is not useful. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_SAMPLE\_RATE}             & Set/Get & double     & Rate of underlying sampling, in samples per second. This is only relevant for values derived over time (e.g., \texttt{PWR\_ATTR\_ENERGY}). \\
+%%%\hline
+%%%\texttt{PWR\_MD\_TIME\_WINDOW}             & Set/Get & \texttt{PWR\_Time}  & The time window used to calculate the value returned or relevant to an attribute. For example, the ``instantaneous'' \texttt{PWR\_ATTR\_POWER} values reported may actually be averaged over a short time window. Power caps are also enforced with respect to a target time window. \\
+%%%\hline
+%%%\texttt{PWR\_MD\_TS\_LATENCY}                  & Get     & \texttt{PWR\_Time}  & Estimate of the time required to get or set an attribute. This is useful to estimate completion time for an operation \textit{a priori}. A value of zero should be returned when the get/set is instantaneous.\\
+%%%  \hline
+%%%\texttt{PWR\_MD\_TS\_ACCURACY}             & Get     & \texttt{PWR\_Time}  & Estimated accuracy of returned timestamps, represented as +/- the \texttt{PWR\_Time} value returned. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_MAX\_LEN}                 & Get     & uint64_t   & The maximum string length that will be returned by the metadata interface. All other string lengths (metadata items ending in ``_LEN'') will be less than or equal to this value.  The value of \texttt{PWR\_MD\_MAX\_LEN} will be less than or equal to \texttt{PWR\_MAX\_STRING\_LEN}. \\
+%%%\hline
+%%%\texttt{PWR\_MD\_NAME\_LEN}                & Get     & uint64_t   & Length of the attribute name string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_NAME} is requested. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_NAME}                     & Get     & char *     & Attribute name string. This is a C-style NULL-terminated ASCII string. This provides a human readable name for the attribute. The string length is given by \texttt{PWR\_MD\_NAME\_LEN}. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_DESC\_LEN}                & Get     & uint64_t   & Length of the attribute description string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_DESC} is requested. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_DESC}                     & Get     & char *     & Attribute description string. This is a C-style NULL-terminated ASCII string. This provides a human readable description of the attribute that is more descriptive than the attribute's name alone. The string length is given by \texttt{PWR\_MD\_DESC\_LEN}. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_VALUE\_LEN}               & Get     & uint64_t   & Maximum length of the value strings returned by \texttt{PWR\_MetaValueAtIndex}. This can be used to discover the buffer size that needs to be passed to \texttt{PWR\_MetaValueAtIndex} via the \texttt{value\_str} argument. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_VENDOR\_INFO\_LEN}        & Get     & uint64_t   & Length of the vendor information string, in bytes. This is the buffer length needed to store the string returned when \texttt{PWR\_MD\_VENDOR\_INFO} is requested. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_VENDOR\_INFO}             & Get     & char *     & Vendor provided information string. This is a C-style NULL-terminated ASCII string. This may be used to convey part numbers, configuration, or other non-standard information. The string length is given by \texttt{PWR\_MD\_VENDOR\_INFO\_LEN}. \\
+%%%  \hline
+%%%\texttt{PWR\_MD\_MEASURE\_METHOD}          & Get     & uint64_t   & Denotes the measurement method: an actual measurement (returned value = 0) or a model based estimate (return value = 1). Other values $> 1$ may be used to denote multiple vendor specific models in the situation where multiple models may exist. \\
+%%%  \hline
+%%%\end{longtable}
+%%%\end{center}
+%%%

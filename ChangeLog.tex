@@ -1,0 +1,141 @@
+The following list contains changes to version 2.0 of the specification.
+\begin{itemize}
+  \item{PWR_StatusCreate - Added a context input parameter and clarified that statuses are cleared when used as an input to a function, therefore they should be checked prior to reuse, and caution should be taken when sharing statuses between threads.}
+  \item{Groups - minor typos corrected in group function descriptions}
+  \item{PWR_AppHint - Added PWR_REGION_GLOBAL_LOOP to region types, this supports runtimes that can time main compute loops}
+  \item{Python - Appendix C has added python language bindings to the Power API}
+
+\end{itemize}
+
+
+The following list contains changes to version 1.4 of the specification.
+
+\begin{itemize}
+  \item{Added PWR_GrpSymDifference - Symmetric difference of groups operation}
+  \item{Added PWR_AttrGov enum and PWR_AttrGov Attribute to express the power governor that is being used by the operating system}
+  \item{Object and Group get/set Attribute calls that returned a PWR_Status object were defined as pointers to an opaque handle, they now take the handle (not as a pointer)}
+  \item{Groups - Clarified - Groups cannot contain duplicates of objects.}
+  \item{Groups - Clarified - Groups can only contain objects from a single PWR_cntxt.}
+  \item{Groups - Clarified - Group operations (e.g. union) can only be done on groups from the same context.}
+  \item{PWR_GrpAddObj() - Changed - Attempting to add and object that is already part of a group will no longer result in an error (duplicate objects are not premitted in a group), but only no operation taking place.}
+  \item{PWR_GrpRemoveObj() - Changed - attempting to remove an object that is not in a group will result in success.}
+  \item{PWR_CntxtGetGrpByName() - Clarified - groups returned by this function must be functionally equivalent to those created via PWR_GrpCreate(). They must also be destroyed as a group created with PWR_GrpCreate() would be.}
+  \item{PWR_AppTuningHint() - Removed - The AppHint functionality has been expanded and significantly changed. App hints must now be created/destroyed using the PWR_AppHintCreate and PWR_AppHintDestroy calls. The inputs to these calls require a hint_region_id, thereby adding suport for multiple nested hints in a single region.}
+  \item{PWR_AppHintCreate() - Added - New function for creation of app hints for a region.}
+  \item{PWR_AppHintDestroy() - Added - New function to destroy previously created app hints.}
+  \item{PWR_AppHintStart() - Added - Once created, app hints for a given region ID can now be started (and stopped with the following new command)}
+  \item{PWR_AppHintStop() - Added - Denotes the end of a region on which a application hint was provided.}
+  \item{PWR_AppHintProgress() - Added - This new function call allows feedback to the Power API and underlying systems that indcates that progress in a region is being made. The time period between progress calls in combination with the progress_fraction input to this function allows a intelligent management system to determine if changes to the power of an underlying job are impacting performance and if so, by how much.}
+
+\end{itemize}
+
+
+The following list contains changes to version 1.3 of the specification.
+
+\begin{itemize}
+  \item{Statistics Functions - Changed - The real-time and historic methodology (and interfaces) for accessing statistics are no longer unified as they were in previous specification versions.
+                                         Interfaces for accessing historic statistics (for example from a database) are now much more direct and can be accomplished using a single call. 
+                                         The interfaces for real-time statistic collection have remained largely the same but have addressed some implementation challenges. 
+                                         As such they should be much more useful and easy to implement. }
+  \item{PWR_OBJ_HT - Added - The PWR_OBJ_HT object type was added to respond to map more directly to how the Linux operating system views control points for the purpose of frequency modification, for example.}
+  \item{PWR_ATTR_GOV - Added - The PWR_ATTR_GOV attribute type was added to map to power related governer capabilities such as those found exposed through the Linux operating system. }
+\end{itemize}
+
+
+The following list contains changes to version 1.2 of the specification.
+
+\begin{itemize}
+    \item{PWR_ATTR_STAT_SUM - Added - The PWR_ATTR_STAT_SUM operation was added to the PWR_AttrStat enum, intended primarily for use in PWR_StatGetReduce() as a reduction operation. }
+    \item{PWR_StatGetReduce() - Changed - The description of PWR_StatGetReduce() was clarified. Arguments were added to allow the reduction operation to be specified separately from the input PWR_Stat statistic and to return the index of the object that produced the reduction result (e.g., for PWR_ATTR_STAT_MIN and PWR_ATTR_STAT_MAX operations).}
+    \item{Statistics Functions - Changed - Changed return codes of PWR_StatStart, PWR_StatStop, PWR_StatClear, PWR_StatGetValue, and PWR_StatGetValues to be an 'int' (previously was PWR_Stat, which was a typo). }
+    \item{Function prototype changes - The following list of function prototypes have been changed to return an integer status. Functionality of these functions remains the same}
+    \begin{itemize}
+      \item{Initialization Functions - Changed - Changed PWR_CntxtInit function prototype. }
+      \item{Navigation Functions - Changed - Changed PWR_CntxtGetEntryPoint,\\
+      PWR_ObjGetType, PWR_ObjGetName, PWR_ObjGetParent, PWR_ObjGetChildren,\\ 
+      PWR_CntxtGetObjByName function prototypes. }
+      \item{Group Functions - Changed - Changed PWR_GrpCreate, PWR_GrpDuplicate,\\
+      PWR_GrpUnion, PWR_GrpIntersection, PWR_GrpDifference, \\
+      PWR_GrpGet_ObjByIndx, PWR_CntxtGetGrpByName function prototypes. }
+      \item{Attribute Functions - Changed - Changed PWR_StatusCreate function prototype. }
+      \item{Statistic Functions - Changed - Changed PWR_ObjCreateStat, PWR_GrpCreateStat function prototype. }
+    \end{itemize}
+    \item{Error Return Definitions - Added - Added PWR_RET_WARN_NO_GRP_BY_NAME,\\
+    PWR_RET_WARN_NO_OBJ_BY_NAME, PWR_RET_WARN_NO_OBJ_AT_INDEX, \\
+    PWR_RET_WARN_NO_CHILDREN, PWR_RET_WARN_NO_PARENT definitions }
+    \item{Error Return Definitions - Deleted - Deleted PWR_RET_WARN_NOT_OPTIMIZED definition }
+    \item{Error Return Definitions - Changed - Changed PWR_RET_WARN_NO_OBJ_AT_INDEX now PWR_RET_NO_OBJ_AT_INDEX}
+    \item{PWR_AttrAccessError - Changed - Added an index field to indicate the index in the output array where the error occurred.}
+    \item{PWR_StatusPopError - Changed - Added a description of the fields returned in the \\
+    PWR_AttrAccessError structure and the order that errors are returned.}
+\end{itemize}
+
+
+The following list contains changes to version 1.1a of the specification.
+
+\begin{itemize}
+    \item{PWR_ID - Changed - PWR_USER_ID, PWR_JOB_ID and PWR_RUN_ID to \\
+    PWR_ID_USER, PWR_ID_JOB and PWR_ID_RUN respectively. This change was done in order to bring the PWR_AttrStat enum into line with existing naming conventions in the specification.}
+    \item{PWR_ID - Changed - PWR_ID_SPECIFIED = -2 was changed to \\
+    PWR_ID_NOT_SPECIFIED = -2 in order to better represent the purpose of the value.}
+    \item{PWR_GrpUnion() - Changed - arguments were misnamed as PWR_Grp group, PWR_Grp group, they are now changed to PWR_Grp group1 and PWR_Grp group2.} 
+    \item{PWR_GrpIntersect() - Changed - arguments were misnamed as PWR_Grp group, PWR_Grp group, they are now changed to PWR_Grp group1 and PWR_Grp group2.}
+    \item{PWR_GrpDifference() - Changed - arguments were misnamed as PWR_Grp group, PWR_Grp group, they are now changed to PWR_Grp group1 and PWR_Grp group2.}
+    \item{PWR_CntxtGetGrpByName() - Clarified - The source of the group names to be used with this function was clarified, they are to be provided in vendor documentation. Further notes have been added to make the user aware of the fact that due to this being dependent on individual vendors, it is by nature non-portable}.
+    \item{PWR_StatGetReduce() - Changed - The return type of this function was a PWR_Stat when it should have been an int, it now returns an int.}
+    \item{PWR_StatDestroy() - Changed - The return type of this function was a PWR_Stat when it should have been an int, it now returns an int.}
+    \item{PWR_GetReportByID() - Changed - The function prototype was missing a comma after the *value argument, this typo was fixed.}
+    \item{PWR_WakeUpLatency() - Changed - The function prototype was missing a comma after the PWR_SleepState state  argument, this typo was fixed.}
+    \item{PWR_RecommendedSleepState() - Changed - The function prototype was missing a comma after the PWR_Time latency  argument, this typo was fixed.}
+    \item{PWR_RecommendedSleepState() - Changed - PWR_Obj variable name was missing, this was added as "obj".}
+\end{itemize}
+
+
+The following list contains changes to version 1.1 of this specification.
+
+\begin{itemize}
+    \item{PWR_GrpCreate() -  Changed - This function no longer requires a user specified name parameter. The utility of the user specifying a name for user created groups was determined to be of little value.}
+    \item{PWR_GrpDuplicate() -  Changed - This function no longer requires a user specified name. The utility of the user specifying a name for user created groups was determined to be of little value.}
+    \item{PWR_GrpGetName() - Removed - This function is no longer necessary due to the changes made to PWR_GrpCreate() and PWR_GrpDuplicate().}
+    \item{PWR_GrpUnion() - Added - New function to create a new group which is the  union of two existing groups}
+    \item{PWR_GrpIntersection() - Added - New function to create a new group which is the Intersection of two existing groups}
+    \item{PWR_GrpDifference() - Added - New function to create a new group which is the difference of two existing groups}
+    \item{High Level (Common) Functions - Added - This chapter will contain any high level functions that are common to multiple Role/System interfaces.}
+    \item{Report Functions -   Added - This section of chapter High Level Functions will contain any high level report generating functions that are common to multiple Role/System interfaces.}
+    \item{PWR_GetStatByID() - Changed - This function has been changed to PWR_GetReportByID() and added to the Report Functions section of the High Level (Common) Functions chapter. It requires an additional parameter of the users context. The statTimes parameter has been changed to ReportTimes and is now of type TimePeriod.  The id_type parameter has been changed to type PWR_ID. } 
+    \item{PWR_GetStatByUser() - Removed - This function was considered an unnecessary abstraction of PWR_GetStatByID() which has been changed to PWR_GetReportByID().}
+    \item{PWR_GetStatByJob() - Removed - This function was considered an unnecessary abstraction of PWR_GetStatByID() which has been changed to PWR_GetReportByID().}
+    \item{PWR_GetEnergyByID() - Removed - This function was considered an unnecessary abstraction of PWR_GetStatByID() which has been changed to PWR_GetReportByID().}
+    \item{PWR_GetEnergyByUser() - Removed - This function was considered an unnecessary abstraction of PWR_GetStatByID() which has been changed to PWR_GetReportByID().}
+    \item{PWR_GetEnergyByJob() - Removed - This function was considered an unnecessary abstraction of PWR_GetStatByID() which has been changed to PWR_GetReportByID().}
+    \item{PWR StatGetReduce() - Added - New functionality to preform a reduction (Min, Max, Avg, etc.) of a requested statistic. }
+    \item{PWR_RET_FAILURE - Clarified - Noted that a failure return can be a partial failure, not necessarily a total failure. This is useful for PWR_GrpSetValues and PWR_GrpGetValues.}
+    \item{PWR_StateTransitDelay() - Clarified - Removed a discussion on what expected values were to be as it was not true for all platforms.}
+    \item{PWR_OperState - Changed - Updated PWR_OperState to use uint64_t types instead of ints.}
+    \item{PWR_MD_TS_LATENCY - Typo - Accidentally listed as PWR_MD_LATENCY in the big list of attributes}
+    \item{PWR_CntxtGetEntryPoint() - Clarified - Corrected description of function, incorrect in version 1.0}
+    \item{PWR_StatID - Changed - Typedef changed to more generic PWR_ID}
+    \item{PWR_StatTime - Changed - Typedef changed to more generic PWR_TimePeriod}
+    \item{PWR_StatGetValue() - Changed - statTimes parameter now is of time PWR_TimePeriod}
+    \item{PWR_StatGetValues() - Changed - statTimes parameter now is of time PWR_TimePeriod}
+    \item{PWR_StatStart() - Changed - The stat parameter is now statObj, more descriptive}
+    \item{PWR_StatClear() - Changed - The stat parameter is now statObj, more descriptive}
+    \item{PWR_StatGetValues() - Changed  - The stat parameter is now statObj, more descriptive}
+    \item{Interfaces - Changed - Now called Role/System Interfaces, clarified description}
+    \item{PWR_ATTR_THROTTLED_TIME - Added - New attribute to get the cumulative time throttled in nanoseconds.}
+    \item{PWR_ATTR_THROTTLED_COUNT - Added - New attribute to get the cumulative count of throttle events.}
+    \item{Attribute Get Functions - Changed - Allow NULL to be passed in for timestamp arguments if no timestamp is required.}
+    \item{Attribute Get and Set Functions - Clarified - Clarified where values are stored at in input and output \texttt{void *} arrays. Previously the offset that value \texttt{i} is stored at was unspecified.}
+    \item{Argument Types - Changed - Changed all occurrences of \texttt{int} to \texttt{uint64_t}.}
+    \item{Argument Types - Changed - Changed all occurrences of \texttt{float} to \texttt{double}.}
+    \item{PWR_Status - Clarified - Clarified that \texttt{PWR_Status} objects only contain the status of failed operations. The status of successful operations is not included.}
+    \item{All functions that return a PWR_Status - Clarified that all operations requested by the caller are attempted at least once (i.e., the PowerAPI does not stop at the first error). Failed operations have their status returned in the \texttt{PWR_Status} object. All other operations succeeded.}
+    \item{PWR_MAJOR_VERSION - Added - Added a compile time constant indicating the major version of the Power API version supported by the implementation.}
+    \item{PWR_MINOR_VERSION - Added - Added a compile time constant indicating the minor version of the Power API version supported by the implementation.}
+    \item{PWR_RET_WARN_NOT_OPTIMIZED - Added - New warning return code to indicate that the operation requested was not optimized.}
+    \item{All Enumeration Types - Added - For each enumeration, added values for \texttt{INVALID},\\
+    \texttt{NOT_SPECIFIED}, and the count of values defined by the enum.}
+    \item{PWR_ATTR_POWER_MIN - Changed - Renamed PWR_ATTR_POWER_MIN attribute to PWR_ATTR_POWER_LIMIT_MIN and clarified description.}
+    \item{PWR_ATTR_POWER_MAX - Changed - Renamed PWR_ATTR_POWER_MAX attribute to PWR_ATTR_POWER_LIMIT_MAX and clarified description.}
+\end{itemize}
+

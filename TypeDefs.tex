@@ -1,0 +1,612 @@
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{Opaque Types}\label{sec:OpaqueTypes}
+
+The following type definitions are specified to be opaque pointers from the point of view of Power API users.
+Power API implementations will typically map these pointers to internal implementation-specific state.
+The reason for using opaque pointers is to hide non-portable implementation details from users and give implementors of the API maximum flexibility.
+
+\begin{typedefs}
+	\typedef{void*}{Cntxt}
+	\typedef{void*}{Grp}
+	\typedef{void*}{Obj}
+	\typedef{void*}{Status}
+	\typedef{void*}{Stat}
+\end{typedefs}
+
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================% 
+%==============================================================================%
+
+\section{Globally Relevant Definitions}\label{sec:GlobalTypes}
+
+The following definitions are specified on a global basis.
+The \MAJORVERSIONrefx and \defrefx{MINORVERSION} definitions are compile time constants that indicate the Power API version supported by the implementation.
+The \defrefx{MAXSTRINGLEN} definition is a compile time constant that defines the maximum length of strings that can be returned from Power API calls, with the actual value being a vendor specific length.
+
+\begin{typedefs}
+	\pounddefineMAJORVERSION
+	\pounddefineMINORVERSION
+	\pounddefineMAXSTRINGLEN
+\end{typedefs}
+
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{Context Relevant Type Definitions}\label{sec:ContextTypeDefinitions}
+
+The \typeref{CntxtType} and \typerefx{Role} types are required to be defined by all implementations of the Power API.
+When a new Power API context is created, one value from each of these types is used to determine the kind of context created (see section \ref{sec:Initialization}).
+For \typerefx{CntxtType}, the only required value that an implementation must define is \CNTXTDEFAULTrefx.
+This indicates that the new context will only contain Power API functionality that is explicitly defined in the specification, with no implementation-specific extentions present.
+Implementors may extend \typerefx{CntxtType} with additional values, such as \CNTXTVENDORrefx, to provide contexts with additional functionality.
+
+We anticipate that most implementations of the Power API will define additional \typerefx{CntxtType} values that provide additional functionality, such as vendor, platform, or model specific extentions.
+If an implementation extends the specification, the extensions should only be visible to the user when they use a context that was created with an implementation-specific \typerefx{CntxtType} value.
+If the implementation-specific extensions are not available to the user, initialization using an implementation-specific \typerefx{CntxtType} value should result in failure.
+The user must always be able to initialize a context using \CNTXTDEFAULTref to to get a context containing only the standard specification features.
+
+Differentiation between context types is the mechanism used by the Power API to enable extended vendor, platform or model specific capabilities while, at the same time, allowing portability for applications or tools that only leverage standard specification features. 
+For example, a tool that leverages only the object and attribute types defined in the standard specification can initialize a Power API context using \CNTXTDEFAULTrefx and not have to worry about dealing with any implementation-specific functionality.
+The context it receives will only provide functionality that is explicitly defined by the Power API specification.
+
+\typeref{Role} is used to specify the role that the user is acting in when they initialize a new context.
+Additional roles may not be added by the implementor.
+Notice that there is a role defined for every actor in Chapter \ref{chap:Interfaces} - Role/Systems Interfaces.
+We intend that the user's role will serve many purposes, such as determining the view of the system that is provided within the context when combined with the system the user is acting on. 
+Roles can also be used to help determine the privilege of the user's context for purposes such as resolving the precedence of conflicting operations.
+
+
+\subsubsection{PWR_CntxtType}\label{type:CntxtType}
+\begin{typedefs}
+	\typedef{int}{CntxtType}
+	\pounddefineCNTXTDEFAULT
+	\pounddefineCNTXTVENDOR
+\end{typedefs}
+
+
+%==============================================================================%
+
+\subsubsection{PWR_Role}\label{type:Role}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_ROLE_APP = 0,   /* Application */
+        PWR_ROLE_MC,        /* Monitor and Control */
+        PWR_ROLE_OS,        /* Operating System */
+        PWR_ROLE_USER,      /* User */
+        PWR_ROLE_RM,        /* Resource Manager */
+        PWR_ROLE_ADMIN,     /* Administrator */
+        PWR_ROLE_MGR,       /* HPCS Manager */
+        PWR_ROLE_ACC,       /* Accounting */
+        PWR_NUM_ROLES,
+        /* */
+        PWR_ROLE_INVALID       = -1,
+        PWR_ROLE_NOT_SPECIFIED = -2
+} PWR_Role;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+
+\section{Object Relevant Type Definitions}\label{sec:ObjectTypeDefinitions}
+
+The \typeref{ObjType} type is required to be defined by all implementations of the Power API specification. 
+Objects with types defined by \typerefx{ObjType} are used by the implementor to create the system description (see section \ref{sec:PowerAPIBaseSysDesc}) that is exposed to the user upon initialization.
+An implementation may extend this type by adding new object enumeration type, which must be added prior to \texttt{PWR_NUM_OBJ_TYPES}.
+The added implementation-specific object types will only be used by implementation-specific contexts (see section \ref{sec:ContextTypeDefinitions}).
+Contexts that were initialized using the default context, \texttt{PWR_CNTXT_DEFAULT}, will only expose objects types defined in the list below.
+
+%==============================================================================%
+
+\subsubsection{PWR_ObjType}\label{type:ObjType}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_OBJ_PLATFORM = 0,
+        PWR_OBJ_CABINET,
+        PWR_OBJ_CHASSIS,
+        PWR_OBJ_BOARD,
+        PWR_OBJ_NODE,
+        PWR_OBJ_SOCKET,
+        PWR_OBJ_CORE,
+        PWR_OBJ_POWER_PLANE,
+        PWR_OBJ_MEM,
+        PWR_OBJ_NIC,
+        PWR_OBJ_HT,
+        PWR_NUM_OBJ_TYPES,
+        /* */
+        PWR_OBJ_INVALID       = -1,
+        PWR_OBJ_NOT_SPECIFIED = -2
+} PWR_ObjType;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+
+
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{Attribute Relevant Type Definitions}\label{sec:AttributeTypeDefinitions}
+
+The \typeref{AttrName} and \typerefx{AttrDataType} types are required to be implemented. 
+Both may be extended by the implementor and exposed using an implementation specified context type (see section \ref{sec:ContextTypeDefinitions}).
+If new \typerefx{AttrName} entries are added it is required that the attribute name is specified and commented as shown in the \typerefx{AttrName} structure.
+Likewise, new types must be added to the \typerefx{AttrDataType} structure. 
+It's important to note that the attribute interface currently supports only numeric types.
+Attributes should only be added to this definition if they can be meaningfully supported by the attribute interface (section \ref{sec:Attributes}).
+Additional attributes must be added prior to  \texttt{PWR_NUM_ATTR_NAMES}.
+The Attributes in \typerefx{AttrName} expose what we consider foundational measurement and control interfaces. 
+Additional capabilities are and can be added using additional operations and often interface specific functions.
+
+The \typeref{AttrAccessError} type is used to hold the error returns that are popped from the \texttt{PWR_Status} handle (see section \ref{sec:OpaqueTypes}) using the \funcref{StatusPopError} function.
+
+%==============================================================================%
+
+\subsubsection{PWR_AttrName}\label{type:AttrName}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_ATTR_PSTATE = 0,         /* uint64_t */
+        PWR_ATTR_CSTATE,             /* uint64_t */
+        PWR_ATTR_CSTATE_LIMIT,       /* uint64_t */
+        PWR_ATTR_SSTATE,             /* uint64_t */
+        PWR_ATTR_CURRENT,            /* double, amps */
+        PWR_ATTR_VOLTAGE,            /* double, volts */
+        PWR_ATTR_POWER,              /* double, watts */
+        PWR_ATTR_POWER_LIMIT_MIN,    /* double, watts */
+        PWR_ATTR_POWER_LIMIT_MAX,    /* double, watts */
+        PWR_ATTR_FREQ,               /* double, Hz */
+        PWR_ATTR_FREQ_LIMIT_MIN,     /* double, Hz */
+        PWR_ATTR_FREQ_LIMIT_MAX,     /* double, Hz */
+        PWR_ATTR_ENERGY,             /* double, joules */
+        PWR_ATTR_TEMP,               /* double, degrees Celsius */
+        PWR_ATTR_OS_ID,              /* uint64_t */
+        PWR_ATTR_THROTTLED_TIME,     /* uint64_t */
+        PWR_ATTR_THROTTLED_COUNT,    /* uint64_t */
+        PWR_ATTR_GOV,                /* uint64_t */
+        PWR_NUM_ATTR_NAMES,
+        /* */
+        PWR_ATTR_INVALID       = -1,
+        PWR_ATTR_NOT_SPECIFIED = -2
+} PWR_AttrName;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+
+\subsubsection{PWR_AttrDataType}\label{type:AttrDataType}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_ATTR_DATA_DOUBLE = 0,
+        PWR_ATTR_DATA_UINT64,
+        PWR_NUM_ATTR_DATA_TYPES,
+        /* */
+        PWR_ATTR_DATA_INVALID       = -1,
+        PWR_ATTR_DATA_NOT_SPECIFIED = -2
+} PWR_AttrDataType;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+
+\subsubsection{PWR_AttrAccessError}\label{type:AttrAccessError}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef struct {
+        PWR_Obj      obj;    /* The object associated with the error */
+        PWR_AttrName attr;   /* The attribute associated with the error */
+        int          index;  /* The index in the output array where the error occurred */
+        int          error;  /* The error code, see Error Return Definitions section */
+} PWR_AttrAccessError;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+
+\subsubsection{PWR_AttrGov}\label{type:AttrGov}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_GOV_LINUX_ONDEMAND,
+        PWR_GOV_LINUX_PERFORMANCE,
+        PWR_GOV_LINUX_CONSERVATIVE,
+        PWR_GOV_LINUX_POWERSAVE,
+        PWR_GOV_LINUX_USERSPACE
+} PWR_AttrGov;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+
+\section{Metadata Relevant Type Definitions}\label{sec:MetadataTypeDefinitions}
+
+The \texttt{PWR_MetaName} type is required to be implemented. 
+The type may be extended by the implementor and the additional capabilities may be exposed using an implementation specified context type (see section \ref{sec:ContextTypeDefinitions}).
+If new \texttt{PWR_MetaName} items are added, it is required that the metadata name be specified and commented as shown in the \texttt{PWR_MetaName} definition. 
+Additional metadata items must be added prior to \texttt{PWR_NUM_META_NAMES}.
+
+
+%==============================================================================%
+
+\subsubsection{PWR_MetaName}\label{type:MetaName}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_MD_NUM = 0,           /* uint64_t */
+        PWR_MD_MIN,               /* either uint64_t or double, depending on attribute type */
+        PWR_MD_MAX,               /* either uint64_t or double, depending on attribute type */
+        PWR_MD_PRECISION,         /* uint64_t */
+        PWR_MD_ACCURACY,          /* double */
+        PWR_MD_UPDATE_RATE,       /* double */
+        PWR_MD_SAMPLE_RATE,       /* double */
+        PWR_MD_TIME_WINDOW,       /* PWR_Time */
+        PWR_MD_TS_LATENCY,        /* PWR_Time */
+        PWR_MD_TS_ACCURACY,       /* PWR_Time */
+        PWR_MD_MAX_LEN,           /* uint64_t, max strlen of any returned metadata string. */
+        PWR_MD_NAME_LEN,          /* uint64_t, max strlen of PWR_MD_NAME */
+        PWR_MD_NAME,              /* char *, C-style NULL-terminated ASCII string */
+        PWR_MD_DESC_LEN,          /* uint64_t, max strlen of PWR_MD_DESC */
+        PWR_MD_DESC,              /* char *, C-style NULL-terminated ASCII string */
+        PWR_MD_VALUE_LEN,         /* uint64_t, max strlen returned by PWR_MetaValueAtIndex */
+        PWR_MD_VENDOR_INFO_LEN,   /* uint64_t, max strlen of PWR_MD_VENDOR_INFO */
+        PWR_MD_VENDOR_INFO,       /* char *, C-style NULL-terminated ASCII string */
+        PWR_MD_MEASURE_METHOD,    /* uint64_t, 0/1 depending on real/model mesurement */
+        PWR_NUM_META_NAMES,
+        /* */
+        PWR_MD_INVALID       = -1,
+        PWR_MD_NOT_SPECIFIED = -2
+} PWR_MetaName;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{Error Return Definitions}\label{sec:ErrorReturnDefinitions}
+
+The following required definitions are the available status returns for the functions described in this specification. 
+It is anticipated that this list will grow. 
+The implementor is also free to add status returns to express conditions not currently covered in the specification and expose them using an implementation specified context type (see section \ref{sec:ContextTypeDefinitions}).
+The range -127 through 128 are reserved for use by the Power API specification.
+Positive numbers greater than zero are to be used for warnings.
+
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+#define PWR_RET_WARN_TRUNC 5
+#define PWR_RET_WARN_NO_GRP_BY_NAME 4
+#define PWR_RET_WARN_NO_OBJ_BY_NAME 3
+#define PWR_RET_WARN_NO_CHILDREN 2
+#define PWR_RET_WARN_NO_PARENT 1
+#define PWR_RET_SUCCESS 0
+#define PWR_RET_FAILURE -1
+#define PWR_RET_NOT_IMPLEMENTED -2
+#define PWR_RET_EMPTY -3
+#define PWR_RET_INVALID -4
+#define PWR_RET_LENGTH -5
+#define PWR_RET_NO_ATTRIB -6
+#define PWR_RET_NO_META -7
+#define PWR_RET_READ_ONLY -8
+#define PWR_RET_BAD_VALUE -9
+#define PWR_RET_BAD_INDEX -10
+#define PWR_RET_OP_NOT_ATTEMPTED -11
+#define PWR_RET_NO_PERM -12
+#define PWR_RET_OUT_OF_RANGE -13
+#define PWR_RET_NO_OBJ_AT_INDEX -14
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{Time Related Definitions}\label{sec:TimeRelatedDefinitions}
+
+\texttt{PWR_Time} is defined as a 64-bit value used to hold timestamps in nanoseconds for a wide range of functionality. 
+For those timestamps that are to be used in relation to an epoch, midnight January 1st, 1970 will be considered the beginning of the epoch.
+This will provide for hundreds of years to be expressed from the epoch point, which is sufficient for the purposes of the Power API.
+\texttt{PWR_Time} is also used for other structures designed to record time values (\texttt{PWR_TimePeriod}, page \pageref{type:TimePeriod} for example). 
+\texttt{PWR_TIME_UNINIT} is used as an indicator that the time value has not been initialized. 
+This is intended to allow the implementation to make decisions on how a function is being used based on whether a time value has been specified or not (for example, the Statistics functions in section \ref{sec:StatisticsFunctions}).
+\texttt{PWR_TIME_UNKNOWN} is an output, which indicates that the time of an event was not recorded. For example, a maximum value for an attribute could be known for a given time period, but the instant at which the maximum occurred is unknown.
+The \texttt{PWR_TimePeriod} type allows for three timestamps, start, stop and instant. 
+Instant is available to indicate when a statistically significant event occurred within the window delineated by start and stop.
+For example, if the user requests the \texttt{PWR_ATTR_STAT_MAX} statistic for \texttt{PWR_ATTR_POWER}, the start and stop times will indicate the window of time over which the maximum value was calculated. 
+The instant would indicate the instant in time the maximum value occurred.
+Defining \texttt{PWR_Time}, \texttt{PWR_TIME_UNINIT}, \texttt{PWR_TIME_UNKNOWN}, and \texttt{PWR_TimePeriod} as specified is required.
+
+
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef uint64_t PWR_Time;
+#define PWR_TIME_UNINIT 0
+#define PWR_TIME_UNKNOWN 0 
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+\subsubsection{PWR_TimePeriod}\label{type:TimePeriod}
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef struct {
+        PWR_Time    start;
+        PWR_Time    stop;
+        PWR_Time    instant;
+} PWR_TimePeriod;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{Statistics Relevant Type Definitions}\label{sec:StatisticTypeDefinitions}
+The \texttt{PWR_AttrStat} type includes the list of currently defined statistics potentially available to the user of an implementation.
+Potentially, because this feature requires either direct device or software support.
+Statistics are generated on a per-attribute basis (see \texttt{PWR_AttrName} on page \pageref{type:AttrName}). 
+The statistics type definitions are required to be implemented and are used with the statistics functions (see section \ref{sec:StatisticsFunctions}).
+
+%==============================================================================%
+
+\subsubsection{PWR_AttrStat}\label{type:AttrStat}
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_ATTR_STAT_MIN = 0,
+        PWR_ATTR_STAT_MAX,
+        PWR_ATTR_STAT_AVG,
+        PWR_ATTR_STAT_STDEV,
+        PWR_ATTR_STAT_CV,
+        PWR_ATTR_STAT_SUM,
+        PWR_NUM_ATTR_STATS,
+        /* */
+        PWR_ATTR_STAT_INVALID       = -1,
+        PWR_ATTR_STAT_NOT_SPECIFIED = -2
+} PWR_AttrStat;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+
+
+%We probably don't need this anymore as we can use the stat's type for this
+%but I'm leaving this in until version 1.1 is released in case we change our
+%minds by finding a relevant use case for having this in the spec.
+%--REG
+%\subsubsection{PWR_StatReduction}\label{type:StatReduction}
+%\begin{center}
+%\begin{minipage}{.95\linewidth}%
+%\begin{lstlisting}
+%typedef enum {
+%    PWR_ATTR_STAT_REDC_SUM,
+%    PWR_ATTR_STAT_REDC_MIN,
+%    PWR_ATTR_STAT_REDC_MAX,
+%    PWR_ATTR_STAT_REDC_AVG
+%} PWR_StatReduction;
+%\end{lstlisting}
+%\end{minipage}
+%\end{center}
+
+\subsubsection{PWR_ID}\label{type:ID}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_ID_USER = 0,
+        PWR_ID_JOB,
+        PWR_ID_RUN,
+        PWR_NUM_IDS,
+        /* */
+        PWR_ID_INVALID       = -1,
+        PWR_ID_NOT_SPECIFIED = -2
+} PWR_ID;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{OS Hardware Interface Type Definitions}\label{sec:OSHWTypeDefinitions}
+The following definitions are used in the Operating system to Hardware interface described in section \ref{sec:OSHW}.
+Each definition will be described below along with its specification. All of the definitions in this section are required, even if the corresponding OS/HW functions are not implemented. 
+
+
+%==============================================================================%
+
+\subsubsection{PWR_OperState}\label{type:OperState}
+
+The \texttt{PWR_OperState} type is used to describe the state being requested by OS to Hardware interface functions that require power/performance state information such as P-State and C-State information. 
+Both \texttt{c_state_num} and \texttt{p_state_num} must be provided.
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef struct {
+        uint64_t c_state_num;
+        uint64_t p_state_num;
+} PWR_OperState;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+
+
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+%==============================================================================%
+
+\section{Application OS Interface Type Definitions}\label{sec:AppOSTypeDefinitions}
+The following definitions are primarily used in the Application to Operating system interface described in section \ref{sec:AppOS}.
+Each definition will be described below along with its specification. All of the definitions in this section are required, even if the corresponding App/OS functions are not implemented.
+
+%==============================================================================%
+\subsubsection{PWR_RegionHint}\label{type:RegionHint}
+
+The  \texttt{PWR_RegionHint} type is an abstraction intended to allow the application to communicate power and performance significant information to the operating system. It is used in conjunction with \texttt{PWR_RegionIntensity} to describe the type and extent of the behavior described for a given execution region. 
+This information can then be used to \textit{tune} components, with the intent being a more power/performance efficient use of the components results. 
+For example, if an application is going into a serial region, the performance of the application may benefit from the core running the serial portion of the code at a higher frequency, thereby completing that serial portion faster. 
+Since the application is in a serial portion, the implementation may determine that the remaining cores may be put into a more power efficient state (a sleep state for example), thus possibly resulting in both a performance increase and a decrease in the amount of power/energy the application uses.
+Regions may be specified as \texttt{PWR_REGION_DEFAULT} to indicate that the application is no longer providing a hint as to the region characteristics of currently executing code.
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+
+typedef enum {
+        PWR_REGION_DEFAULT = 0,
+        PWR_REGION_SERIAL,
+        PWR_REGION_PARALLEL,
+        PWR_REGION_COMPUTE,
+        PWR_REGION_COMMUNICATE,
+        PWR_REGION_IO,
+        PWR_REGION_MEM_BOUND,
+        PWR_REGION_GLOBAL_LOOP,
+        PWR_NUM_REGION_HINTS,
+        /* */
+        PWR_REGION_INVALID       = -1,
+        PWR_REGION_NOT_SPECIFIED = -2
+} PWR_RegionHint;
+
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+
+\subsubsection{PWR_RegionIntensity}\label{type:RegionIntensity}
+
+The \texttt{PWR_RegionIntensity} type is an abstraction of a given level of intensity for a \texttt{PWR_RegionHint}.
+It provides five levels of intensity as well as \texttt{PWR_Region_INT_NONE}, which can be used in the case where
+the intensity is not known, is not applicable, or in cases where the operating system or runtime may be better
+equipped to determine the intensity of a given code region.
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_REGION_INT_HIGHEST = 0,
+        PWR_REGION_INT_HIGH,
+        PWR_REGION_INT_MEDIUM,
+        PWR_REGION_INT_LOW,
+        PWR_REGION_INT_LOWEST,
+        PWR_REGION_INT_NONE,
+        PWR_NUM_REGION_INTENSITIES,
+        /* */
+        PWR_REGION_INT_INVALID       = -1,
+        PWR_REGION_INT_NOT_SPECIFIED = -2
+} PWR_RegionIntensity;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+
+\subsubsection{PWR_SleepState}\label{type:SleepState}
+
+The \texttt{PWR_SleepState} type is a high level abstraction of the different sleep
+state levels that may be provided on a given system. The sleep levels are translated into
+the appropriate hardware level constructs by lower layers of the PowerAPI. 
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_SLEEP_NO = 0,
+        PWR_SLEEP_SHALLOW,
+        PWR_SLEEP_MEDIUM,
+        PWR_SLEEP_DEEP,
+        PWR_SLEEP_DEEPEST,
+        PWR_NUM_SLEEP_STATES,
+        /* */
+        PWR_SLEEP_INVALID       = -1,
+        PWR_SLEEP_NOT_SPECIFIED = -2
+} PWR_SleepState; 
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+%==============================================================================%
+
+\subsubsection{PWR_PerfState}\label{type:PerfState}
+
+The \texttt{PWR_PerfState} type is an abstraction meant to describe the different
+possible performance states in which hardware may be placed.
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_PERF_FASTEST = 0,
+        PWR_PERF_FAST,
+        PWR_PERF_MEDIUM,
+        PWR_PERF_SLOW,
+        PWR_PERF_SLOWEST,
+        PWR_NUM_PERF_STATES,
+        /* */
+        PWR_PERF_INVALID       = -1,
+        PWR_PERF_NOT_SPECIFIED = -2
+} PWR_PerfState;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+

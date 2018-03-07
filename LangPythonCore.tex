@@ -1,0 +1,1118 @@
+\section{Core (Common) Interface Methods}
+\label{sec:PythonCoreInterfaceFunctions}
+
+Core Interface Methods fall into the following categories:
+\begin{itemize}[noitemsep,nolistsep]
+\item{\textbf{Initialization}}
+\item{\textbf{Navigation}}
+\item{\textbf{Group}}
+\item{\textbf{Attribute}}
+\item{\textbf{Metadata}}
+\item{\textbf{Statistics}}
+\end{itemize}
+
+For background information on the methods described in this section, please refer to
+the C API function descriptions starting at page \pageref{chap:Common}. Many of
+the Interface methods defined are implemented as class instance constructor
+methods in Python versions of this API. Because of the garbage collection
+capabilities of Python, some of the ``Destroy'' methods are not needed. Those
+differences are noted in the following sections. If an error occurs
+instantiating an object, a \texttt{pwr.PwrError} exception is raised.
+
+\subsection{Initialization} \label{sec:PythonInitialization}
+
+%==============================================================================%
+\subsubsection{Method Cntxt} \label{meth:Cntxt}
+
+A context is an instance of the \texttt{pwr.Cntxt} class:
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+
+class Cntxt():
+    def __init__(self, cntxtType, cntxtRole, cntxtName):
+        ...
+    def GetEntryPoint():
+        ...
+\end{lstlisting}\end{minipage}\end{center}
+
+Note: the \texttt{try/except} clause has been added for example purposes, but
+is not included in all the code examples throughout this document.  See general
+discussion about Python Error Handling in section \ref{sec:PythonErrorHandling}
+on page \pageref{sec:PythonErrorHandling}.
+
+To instantiate a default power context for a user role:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+try:
+    myPwrCntxt = pwr.Cntxt(pwr.CntxtType.DEFAULT, pwr.Role.RM, "Default")
+except pwr.PwrError as e:
+    print str(e.errno)
+    print e.errmsg
+    print e.strerror
+#
+# Where:
+#   cntxtType is a pwr.CntxtType
+#   pwrRole is a pwr.Role type
+#   cntxtName is a Python str
+# Returns:
+#   myPwrCntxt is a pwr.Cntxt context
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method CntxtDestroy NOT_IMPLEMENTED} \label{meth:CntxtDestroy}
+
+Because Python implements garbage collection, there is no need to de-initialize or
+destroy a context, and a \texttt{CntxtDestroy} method need not be implemented.
+
+\subsection{Hierarchy Navigation Methods}
+\label{sec:PythonHierarchyNavigationMethods}
+
+%==============================================================================%
+\subsubsection{Method GetEntryPoint} \label{meth:GetEntryPoint}
+
+Once a context has been established, the entry point in the object tree can
+be queried. Each context has its own entry point. Calling the
+\texttt{GetEntryPoint} method on the users context returns the context specific
+entry point.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrObj = myPwrCntxt.GetEntryPoint()
+myPwrObj = myPwrCntxt.entrypoint       # Shortcut
+#
+# Returns:
+#   pwr.Obj object or None
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+Once the entry point object is obtained, it can be queried to get its Type,
+Name, Parent, and Children. These query methods return either an object or a
+\texttt{pwr.Grp} (in the case of \texttt{GetChildren()}), or either \texttt{None}
+or an empty \texttt{pwr.Grp} if the object(s) are non-existent. Not having a
+parent or any children is not considered an error condition. Note that the
+Python handling of non-existent parents and children is different than how
+these conditions are handled in the C API, where a non-zero int is returned. In
+Python returning an empty group or \texttt{None} enables code to handle
+hierarchy navigation more naturally then if an exception was to be raised. The
+\texttt{GetChildren()} method has a generator method, \texttt{GenerateChildren()}.
+
+%==============================================================================%
+\subsubsection{Method GetType} \label{meth:GetType}
+
+This method returns the \texttt{pwr.ObjType} of an object.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+objType = myPwrObj.GetType()
+objType = myPwrObj.objType    # Shortcut
+#
+# Returns:
+#   pwr.ObjType or pwr.ObjType.INVALID upon failure
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetName} \label{meth:GetName}
+
+This method returns the name of an object.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+objName = myPwrObj.GetName()
+objName = myPwrObj.name        # Shortcut
+#
+# Returns:
+#   String containing myPwrObj's name
+# This method raises a pwr.PwrError exception when something goes wrong,
+#   such as if myPwrObj does not actually represent a pwr.Obj instance.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetParent} \label{meth:GetParent}
+
+Note that unlike the corresponding C API function on page
+\pageref{func:ObjGetParent} the Python \texttt{GetParent} Method returns \texttt{None}
+when the base object has no parent. This allows for handling this condition in
+Python without needing a \texttt{try/except} block.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+objParent = myPwrObj.GetParent()
+objParent = myPwrObj.parent       # Shortcut
+#
+# Returns:
+#   pwr.Obj type or None if there is no parent.
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetChildren and GenerateChildren} \label{meth:GetChildren}
+
+Note that unlike the corresponding C API function on page
+\pageref{func:ObjGetChildren}, the Python \texttt{GetChildren} method returns an empty
+group when the base object has no children. This allows for handling this
+condition in Python without needing a \texttt{try/except} block.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Return a pwr.Grp of the children:
+objChildrenGrp = myPwrObj.GetChildren()  # Returns a PwrGrp Group.
+objChildrenGrp = myPwrObj.children       # Shortcut
+# Generator of pwr.Obj children. Yields pwr.Obj members of the group.
+for childPwrObj in myPwrObj.GenerateChildren():
+    # Iterate on childPwrObj...
+#
+# Returns:
+#   objChildrenGrp is a pwr.Grp containing pwr.Obj
+#    type objects of children. An empty pwr.Grp may be returned
+#    when there are no children.
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetObjByName} \label{meth:GetObjByName}
+
+A \texttt{pwr.Obj} object can be obtained using its name. Because the
+the naming system used for this method may be vendor-specific, this method is
+necessarily vendor implementation-specific and should not be considered
+generally portable. Vendor-specific details should be documented by the API
+implementor/vendor.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+namedPwrObj = myPwrCntxt.GetObjByName(objName)
+#
+# Where:
+#   objName is a Python string containing the power object's name
+# Returns:
+#   namedPowerObj is a pwr.Obj or None upon failure
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NOT_IMPLEMENTED
+\end{lstlisting}\end{minipage}\end{center}
+
+\emph{Implementation Note: Object names are vendor-implementation-dependent and
+are not defined in this API. If the name of an object or group is not supported,
+a \texttt{pwr.PwrError} error code with \texttt{pwr.ReturnCode.NOT_IMPLEMENTED}
+is returned.}
+
+\subsection{Group Methods} \label{sec:PythonGroupMethods}
+
+All Power API groups are associated with a context, therefore the group
+creation and retrieval methods are encapsulated as \texttt{pwr.Cntxt} class
+methods. See page \pageref{sec:Group} for the C API's full text description of
+Group operations.
+
+%==============================================================================%
+\subsubsection{Method GrpCreate} \label{meth:GrpCreate}
+
+If a \texttt{pwr.PwrError} does not get raised during creation of this group,
+an empty \texttt{pwr.Grp} group is returned. No specific ``Destroy'' method is
+needed for any \texttt{pwr.Grp} groups. Python's garbage collection handles the
+clean up of \texttt{pwr.Grp} groups that are no longer referenced.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrGrp = myPwrCntxt.GrpCreate()
+#
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+A Power API Group is an encapsulated Python list of pwr.Obj objects.
+This encapsulation offers strict type-checking over that of standard Python
+lists, but gives inheritance of all the power of Python lists to the
+\texttt{pwr.Grp}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myGroup = myPwrCntxt.GrpCreate()
+someOtherList = [1,2,3]
+print isinstance(myGroup, list)            # Prints: "True"
+print isinstance(myGroup, pwr.Grp)         # Prints: "True"
+print isinstance(someOtherList, list)      # Prints: "True"
+print isinstance(someOtherList, pwr.Grp)   # Prints: "False"
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method iter(Grp)} \label{meth:GenerateGroupObjs}
+
+The following standard Python function generates an iterator over the objects
+in a \texttt{pwr.Grp}. See section \ref{sec:PythonIteratorsGenerators}
+on page \pageref{sec:PythonIteratorsGenerators} for more background on
+``generators'':
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+for pwrObj in  iter(myPwrGrp):
+    # Iterate on pwrObj...
+#
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method AddObj} \label{meth:AddObj}
+
+This method adds a \texttt{pwr.Obj} to a group. As noted in the C API
+description on page \pageref{func:GrpAddObj} attempting to add an object that
+is already in a group is not allowed and will result in no insertion.  The
+following shows examples of adding a \texttt{pwr.Obj} to a group.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrGrp.AddObj(pwrObj)
+myPwrGrp = myPwrGrp + pwrObj         # Shortcut
+myPwrGrp = myPwrGrp + [pwrObj, ...]  # Shortcut
+myPwrGrp += pwrObj                   # Shortcut
+myPwrGrp += [pwrObj, ...]            # Shortcut
+#
+# Where:
+#   pwrObj is a pwr.Obj object
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method RemoveObj} \label{meth:RemoveObj}
+
+This removes a \texttt{pwr.Obj} from the group.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrGrp.RemoveObj(pwrObj)
+myPwrGrp = myPwrGrp - pwrObj         # Shortcut
+myPwrGrp = myPwrGrp - [pwrObj, ...]  # Shortcut
+myPwrGrp -= pwrObj                   # Shortcut
+myPwrGrp -= [pwrObj, ...]            # Shortcut
+#
+# Where:
+#   pwrObj is a pwr.Obj object
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetNumObjs} \label{meth:GetNumObjs}
+
+The following returns the number of objects in a group:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrGrpNumObjs = myPwrGrp.GetNumObjs()
+myPwrGrpNumObjs = len(myPwrGrp)          # Shortcut
+#
+# Returns:
+#   myPwrGrpNumObjs is an integer
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetObjByIndx NOT_IMPLEMENTED} \label{meth:GetObjByIndx}
+
+In Python API implementations, there is no need for a Power API method to index
+a group's objects. Python's built-in list class, which forms the foundation of
+a \texttt{pwr.Grp} has all the necessary indexing and iteration methods needed.
+The C API's \texttt{PWR_GrpGetObjByIndx()} function, is documented in
+\ref{func:GrpGetObjByIndx} on page \pageref{func:GrpGetObjByIndx}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Python's built-in iterator
+for pwrObj in iter(myPwrGrp):
+    print pwrObj.GetName()
+
+# Trick:  To index an item in a group:
+pwrObj3 = list(iter(myPwrGrp))[3]
+\end{lstlisting}\end{minipage}\end{center}
+
+
+%==============================================================================%
+\subsubsection{Method Duplicate} \label{meth:Duplicate}
+
+The following duplicates the \texttt{myPwrGrp} group creating the new
+\texttt{duplicateGrp}:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+duplicateGrp = myPwrGrp.Duplicate()
+duplicateGrp = pwr.Grp(myPwrGrp)     # Shortcut: copy constructor.
+#
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method Union and GenerateUnion} \label{meth:Union}
+
+The following example creates a new group \texttt{unionGrp} containing all the
+objects that exist in either or both of the \texttt{myPwrGroup} and the
+\texttt{someOtherPwrGrp} group. The associated \texttt{GenerateUnion()} method is also shown:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+unionGrp = myPwrGrp.Union(someOtherPwrGrp)
+unionGrp = myPwrGrp | someOtherPwrGrp       # Shortcut
+unionGrp |= someOtherPwrGrp                 # Shortcut
+# Generator of pwr.Objs:
+for pwrObj in myPwrGrp.GenerateUnion(someOtherPwrGrp):
+    # Iterate on pwrObj...
+#
+# Where:
+#   someOtherPwrGroup is a pwr.Grp object to merge with
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method Intersection and GenerateIntersection}
+\label{meth:Intersection}
+
+The following creates a new group containing only objects that exist in both the
+\texttt{myPwrGroup} and \texttt{someOtherPwrGrp} groups. The associated
+\texttt{GenerateIntersection()} method is also shown:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+intersectionGrp = myPwrGrp.Intersection(someOtherPwrGrp)
+intersectionGrp = myPwrGrp & someOtherPwrGrp               # Shortcut
+intersectionGrp &= someOtherPwrGrp                         # Shortcut
+# Generator of pwr.Objs:
+for pwrObj in myPwrGrp.GenerateIntersection(someOtherPwrGrp):
+    # Iterate on pwrObj...
+#
+# Where:
+#   someOtherPwrGroup is a pwr.Grp object to merge with
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method Difference and GenerateDifference} \label{meth:Difference}
+
+The following creates a new group containing all the objects of the current
+group or another but do not exist in both groups. The associated
+\texttt{GenerateDifference()} method is also shown:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+differenceGrp = myPwrGrp.Difference(someOtherPwrGrp)
+differenceGrp = myPwrGrp - someOtherGrp              # Shortcut
+differenceGrp -= someOtherGrp                        # Shortcut
+# Generator of pwr.Objs:
+for pwrObj in myPwrGrp.GenerateDifference(someOtherPwrGrp):
+    # Iterate on pwrObj...
+#
+# Where:
+#   someOtherPwrGroup is a pwr.Grp object to merge with
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+
+\subsubsection{Method SymDifference} \label{meth:SymDifference}
+
+The following creates new group containing members in the current group or
+another but not members that are in both groups, that is, the symmetric
+difference of the current group and another. This can be implemented as the
+\texttt{Union()} minus the \texttt{Intersection()} of two groups.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+symDifferenceGrp = myPwrGrp.SymDifference(someOtherPwrGrp)
+symDifferenceGrp = myPwrGrp ^ someOtherGrp              # Shortcut
+symDifferenceGrp ^= someOtherGrp                        # Shortcut
+
+#
+# Where:
+#   someOtherPwrGroup is a pwr.Grp object to merge with
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetGrpByName} \label{meth:GetGrpByName}
+
+For general details see section \ref{func:CntxtGetGrpByName} on page
+\pageref{func:CntxtGetGrpByName}. As noted in that description, valid group
+names are vendor-specific. Use of this function should be considered
+non-portable. Vendor-specific details should be documented by the API
+implementor/vendor. An example of getting a group by name follows:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+groupName = "vendor_supported_group_name_string"
+myPwrGrp  = myPwrCntxt.GetGrpByName(groupName)
+#
+# Where:
+#   groupName: vendor specific string designating group name
+# Returns:
+#   myPwrGrp is a pwr.Grp object or None if none found
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Attribute Methods} \label{sec:PythonAttributeMethods}
+
+%==============================================================================%
+\subsubsection{Method pwr.Obj.AttrGetValue}
+\label{meth:ObjAttrGetValue}
+
+The \texttt{pwr.Obj} \texttt{AttrGetValue} method returns a Python named tuple
+describing a measurement. A measurement is a \texttt{namedtuple} type from the
+\texttt{collections} standard Python library module. Its
+contents can best be described by listing the definition of the named tuple and
+providing an example of how to access its members:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Definition of the named tuple used to contain a measurement:
+InfoFromGet = collections.namedtuple("InfoFromGet",
+                                     "attr value obj timestamp rc")
+\end{lstlisting}\end{minipage}\end{center}
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To return a single measurement:
+attrName = pwr.AttrName.TEMP
+measInfo = myPwrObj.AttrGetValue(attrName)
+
+# Access the results:
+measurementAttr = measInfo.attr
+measurementValue = measInfo.value
+measurementPwrObj = measInfo.obj
+measurementTime = measInfo.timestamp
+measurementError = measInfo.rc
+#
+# When a general failure occurs, a pwr.PwrError exception is raised.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Obj.AttrSetValue}
+\label{meth:ObjAttrSetValue}
+
+Similarly, there is an attribute ``Set'' method for the object, which is capable
+of setting the value of one or more attributes on that object. This method
+uses a named tuple similar to the one defined in
+\ref{meth:ObjAttrGetValue} on page \pageref{meth:ObjAttrGetValue} to feed a
+list of one or more attribute-value pairs to the attribute ``Set`` methods. A
+definition of this named tuple and an example of how to create it follow for
+providing an input to the Attribute ``Set'' methods:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Definition of the named tuple used to contain a setting:
+InfoForSet = collections.namedtuple("InfoForSet", "attr value")
+\end{lstlisting}\end{minipage}\end{center}
+
+Another named tuple definition is used to extract any error information
+that the attribute operation(s) may yield:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Definition of the named tuple used to contain error information
+ErrorFromSet = collections.namedtuple("ErrorFromSet", "attr obj rc")
+\end{lstlisting}\end{minipage}\end{center}
+
+In the below example, the Attribute ``Set'' method, along with the named tuples for setting it and error handling is shown:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To set a single attribute and handle any error that may occur:
+setting = InfoForSet(attr=pwr.AttrName.CSTATE, value=3)
+# The for-loop will catch any possible ErrorFromSet named tuples
+# that the Set operation may yield.
+for setError in myPwrObj.AttrSetValue(setting):
+    errorAttribute = setError.attr
+    errorPwrObj = setError.obj
+    errorReturnCode = setError.rc
+    # Process error here...
+#
+# In case of general failures, the possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Obj.AttrGetValues}
+\label{meth:ObjAttrGetValues}
+
+The \texttt{pwr.Obj} \texttt{AttrGetValues} method returns a list containing Python
+measurement named tuples. Returning a list keeps consistency with the
+\texttt{pwr.Grp} AttrGetValue() and \texttt{pwr.Grp} AttrGetValues()
+methods which return the results from multiple measurements or queries as items
+in a list. For each of the AttrGetValue(s) methods there is a generator
+method which returns a memory-efficient iterator as opposed to a Python list.
+Please refer to \ref{meth:ObjAttrGetValue} on page
+\pageref{meth:ObjAttrGetValue} for details.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To return a measurement for each attribute in the list:
+attrList = [pwr.AttrName.TEMP, pwr.AttrName.VOLTAGE]
+measList = myPwrObj.AttrGetValues(attrList)
+for measInfo in measList:
+    # Access the results:
+    measurementAttr = measInfo.attr
+    measurementValue = measInfo.value
+    measurementPwrObj = measInfo.obj
+    measurementTime = measInfo.timestamp
+    measurementError = measInfo.rc
+
+# To iterate on the results yielded by the generator method:
+for measInfo in myPwrObj.AttrGenerateValues(attrList):
+    # Access the results:
+    measurementAttr = measInfo.attr
+    measurementValue = measInfo.value  # etc.
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Obj.AttrSetValues}
+\label{meth:ObjAttrSetValues}
+
+The \texttt{AttrSetValues} method sets the values for multiple attributes on a
+\texttt{pwr.Obj}, yielding any errors that may have occurred.
+Please refer to
+\ref{meth:ObjAttrSetValue} on page \pageref{meth:ObjAttrSetValue} for details.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To set multiple attributes and handle any errors that may occur:
+setting1 = InfoForSet(attr=pwr.AttrName.CSTATE, value=3)
+setting2 = InfoForSet(attr=pwr.AttrName.PSTATE, value=2)
+settingList = [setting1, setting2]
+for setError in myPwrObj.AttrSetValues(settingList):
+    errorAttribute = setError.attr
+    errorPwrObj = setError.obj
+    errorReturnCode = setError.rc
+    # Process error here...
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Obj.AttrIsValid} \label{meth:ObjAttrIsValid}
+
+To determine the validity of an attribute on a particular \texttt{pwr.Obj}
+object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+pwrAttr = pwr.AttrName.ENERGY
+attrGood = myPwrObj.AttrIsValid(pwrAttr)
+attrGood = myPwrObj.ENERGY.isvalid       # Shortcut
+#
+# Where:
+#   pwrAttr is a pwr.AttrName type
+# Returns:
+#   True or False
+#
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Grp.AttrGetValue}
+\label{meth:GrpAttrGetValue}
+
+The \texttt{pwr.Grp} \texttt{AttrGetValue} method returns a list containing Python
+named tuples containing the resulting measurements of an attribute across a
+\texttt{pwr.Grp}. Returning a list keeps consistency with the
+\texttt{pwr.Obj} AttrGetValues() and \texttt{pwr.Grp} AttrGetValues()
+methods which return the results from multiple measurements or queries as items
+in a list. The InfoFromGet() named tuple is used in the same way
+as with the pwrObj AttrGetValue(s) methods for containing
+the ``measurement'' information. Please refer to \ref{meth:ObjAttrGetValue} on
+page \pageref{meth:ObjAttrGetValue} for details. For this method there is a
+generator method which returns a memory-efficient iterator as opposed to a
+Python list.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Return measurements for the given attribute for all group members
+measList = myPwrGrp.AttrGetValue(pwr.AttrName.TEMP)
+for measInfo in measList:
+    # Access the results:
+    measurementAttr = measInfo.attr
+    measurementValue = measInfo.value
+    measurementPwrObj = measInfo.obj
+    measurementTime = measInfo.timestamp
+    measurementError = measInfo.rc
+
+# To iterate on the results yielded by the generator method:
+for measInfo in myPwrGrp.AttrGenerateValues(pwr.AttrName.TEMP):
+    # Access the results:
+    measurementAttr = measInfo.attr
+    measurementValue = measInfo.value  # etc.
+#
+# When a failure occurs, a pwr.PwrError exception is raised.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Grp.AttrSetValue}
+\label{meth:GrpAttrSetValue}
+
+The \texttt{pwr.Grp} \texttt{AttrSetValue} method sets the value of an attribute on all the
+\texttt{pwr.Obj} objects across a \texttt{pwr.Grp}.  The named tuple definitions
+InfoForSet() and ErrorFromSet() are used in the same way as with the pwrObj
+AttrSetValue(s) methods for extraction and construction of the ``settings''
+and error named tuples. Please refer to \ref{meth:ObjAttrGetValue} on page
+\pageref{meth:ObjAttrGetValue} and \ref{meth:ObjAttrSetValue} on page
+\pageref{meth:ObjAttrSetValue} for details.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Set a single attribute for all objects in a group
+# and handle any errors that may occur:
+setting = pwr.InfoForSet(attr=pwr.AttrName.CSTATE, value=3)
+for setError in myPwrGrp.AttrSetValue(setting):
+    errorAttribute = setError.attr
+    errorPwrObj = setError.obj
+    errorReturnCode = setError.rc
+    # Process error on particular object
+#
+# In case of general failures, the possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Grp.AttrGetValues}
+\label{meth:GrpAttrGetValues}
+
+The \texttt{pwr.Grp.AttrGetValues()} method returns a list containing Python
+measurement named tuples. Returning a list maintains consistency with the
+\texttt{pwr.Obj.AttrGetValues()} and \texttt{pwr.Grp.AttrGetValue()}
+methods which return the results from multiple measurements or queries as items
+in a list. For each of the AttrGetValue(s) methods, there is a generator
+method which returns a memory-efficient iterator as opposed to a Python list:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To return a list of measurements of a list of attributes across the
+# pwr.Obj members of a pwr.Grp, and access the results:
+attrList = [pwr.AttrName.TEMP, pwr.AttrName.POWER]
+measList = myPwrGrp.AttrGetValues(attrList)
+for measInfo in measList:
+    # Access the results:
+    measurementAttr = measInfo.attr
+    measurementValue = measInfo.value
+    measurementPwrObj = measInfo.obj
+    measurementTime = measInfo.timestamp
+    measurementError = measInfo.rc
+
+# To iterate on the results yielded by the generator method:
+for measInfo in myPwrGrp.AttrGenerateValues(attrList):
+    # Access the results:
+    measurementAttr = measInfo.attr
+    measurementValue = measInfo.value  # etc.
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Grp.AttrSetValues}
+\label{meth:GrpAttrSetValues}
+
+This method sets values for multiple attributes on all the objects in a
+group.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To set multiple attributes across all objects of a group
+# and handle any errors that may occur:
+setting1 = pwr.InfoForSet(attr=pwr.AttrName.CSTATE, value=3)
+setting2 = pwr.InfoForSet(attr=pwr.AttrName.PSTATE, value=2)
+settingList = [setting1, setting2]
+for setError in myPwrGrp.AttrSetValues(settingList):
+    errorAttribute = setError.attr
+    errorPwrObj = setError.obj
+    errorReturnCode = setError.rc
+    # Process error on particular attr for particular object.
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Metadata Methods} \label{sec:PythonMetadataMethods}
+The C API metadata functions (see page \pageref{sec:METADATA}) are represented
+in Python API implementations as class methods to the \texttt{pwr.Obj}
+object.
+
+%==============================================================================%
+\subsubsection{Method AttrGetMeta} \label{meth:AttrGetMeta}
+
+This method returns a metadata value associated with a \texttt{pwr.Obj} attribute.
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+attrName = pwr.AttrName.TEMP
+metaName = pwr.MetaName.MAX
+metaValue = myPwrObj.AttrGetMeta(attrName, metaName)
+metaValue = myPwrObj.TEMP.MAX    # Shortcut
+#
+# Where:
+#   attrName is the pwr.AttrName attribute to get the meta info for
+#   metaName is the pwr.MetaName meta information to set
+# Returns:
+#   metaValue: the meta information requested
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NO_ATTRIB
+#   pwr.ReturnCode.NO_META
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method AttrSetMeta} \label{meth:AttrSetMeta}
+
+This method writes a metadata value to the \texttt{pwr.Obj}'s attribute's metadata.
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+attrName = pwr.AttrName.CSTATE
+metaName = pwr.MetaName.SAMPLE_RATE
+myPwrObj.AttrSetMeta(attrName, metaName, 100)
+myPwrObj.CSTATE.SAMPLE_RATE = 100   # Shortcut
+#
+# Where:
+#   attrName is the pwr.AttrName attribute to get the meta info for
+#   metaName is the pwr.MetaName meta information to set
+#   metaValue: the meta information to set
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NO_ATTRIB
+#   pwr.ReturnCode.NO_META
+#   pwr.ReturnCode.READ_ONLY
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetMetaValueAtIndex} \label{meth:GetMetaValueAtIndex}
+
+This method returns a two-item tuple with the metadata value and a string representation of that value.
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+attrName = pwr.AttrName.CSTATE
+metaValue, metaString = myPwrObj.GetMetaValueAtIndex(attrName, 1)
+metaValue, metaString = myPwrObj.CSTATE[1]   # Shortcut
+#
+# Where:
+#   attrName is a pwr.AttrName type
+#   index is the index of the meta data item
+# Returns:
+#   metaValue is the meta information requested
+#   metaString is the string version of the meta information
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.NO_ATTRIB
+#   pwr.ReturnCode.BAD_INDEX
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Statistics Methods} \label{sec:PythonStatisticsMethods}
+
+Statistics are applied either to Python \texttt{pwr.Obj} or a \texttt{pwr.Grp}
+objects. Because of this, the various statistics methods are either
+encapsulated by the \texttt{pwr.Obj} or the \texttt{pwr.Grp} classes. See
+section \ref{sec:StatisticsFunctions} starting on page
+\pageref{sec:StatisticsFunctions} for C API documentation on statistics.
+
+%==============================================================================%
+\subsubsection{Method pwr.Obj.GetStat} \label{meth:ObjGetStat}
+
+Return a named tuple describing the requested historic statistic. Refer to
+\ref{meth:ObjAttrGetValue} on page \pageref{meth:ObjAttrGetValue} for details
+of the \texttt{InfoFromGet()} named tuple to access the information returned. The
+C API equivalent of this method is documented in section
+\ref{func:ObjGetStat} on page \pageref{func:ObjGetStat}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To return a single historic statistic:
+attrName = pwr.AttrName.POWER
+attrStat = pwr.AttrStat.AVG
+endTime = Time(time.time())                                   # current time.
+timePeriod = timePeriod(start=(endTime-3600.0), end=endTime)  # one hour.
+statInfo = myPwrObj.GetStat(attrName, attrStat, timePeriod)
+# Where:
+#     attrName is a pwr.AttrName attribute name
+#     attrStat is the pwr.AttrStat statistic to gather
+#     timePeriod is the desired time of the statistic
+# To access the results:
+statisticValue = statInfo.value
+statisticTimePeriod = statInfo.timestamp
+statisticErrorCode = statInfo.rc
+#
+# When a general failure occurs, a pwr.PwrError exception is raised.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Grp.GetStats} \label{class:GrpGetStats}
+
+This method returns a list containing Python named tuples describing historic statistics
+across the objects of a \texttt{pwr.Grp}.
+The C API equivalent of this method is documented in section
+\ref{func:GrpGetStats} on page \pageref{func:GrpGetStats}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To return historic statistics over the objects of a pwr.Grp:
+attrName = pwr.AttrName.POWER
+attrStat = pwr.AttrStat.AVG
+endTime = Time(time.time())                                   # current time.
+timePeriod = timePeriod(start=(endTime-3600.0), end=endTime)  # one hour.
+statList = myPwrGrp.GetStats(attrName, attrStat, timePeriod)
+# Where:
+#     attrName is a pwr.AttrName attribute name
+#     attrStat is the pwr.AttrStat statistic to gather
+#     timePeriod: is the desired TimePeriod of the statistic, or None
+# To access the results:
+for statInfo in statList:
+    # Access the results:
+    statisticValue = statInfo.value
+    statisticPwrObj = statInfo.obj
+    statisticTimePeriod = statInfo.timestamp
+    statisticErrorCode = statInfo.rc
+    # Process statistic...
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Class Stat} \label{class:CreateStat}
+
+A \texttt{pwr.Stat} instance provides real-time statistics functionality and may be associated with a \texttt{pwr.Obj} or \texttt{pwr.Grp} object.
+
+%==============================================================================%
+\subsubsection{Method pwr.Obj.CreateStat } \label{meth:ObjCreateStat}
+
+This method creates a \texttt{pwr.Obj.Stat} object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+attrName  = pwr.AttrName.POWER
+attrStat  = pwr.AttrStat.AVG
+myPwrStat = myPwrObj.CreateStat(attrName, attrStat)
+#
+# Where:
+#   attrName is the pwr.AttrName attribute to get the statistics for
+#   attrAttrStat is a pwr.AttrStat object
+# Returns:
+#   myPwrStat : a pwr.Stat object
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Grp.CreateStat } \label{meth:GrpCreateStat}
+
+This method creates a \texttt{pwr.Grp.Stat} object.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+attrName = pwr.AttrName.TEMP
+attrStat = pwr.AttrStat.MAX
+myGrpPwrStat = myPwrGrp.CreateStat(attrName, attrStat)
+#
+# Where:
+#   attrName is the pwr.AttrName attribute to get the statistics for
+#   attrAttrStat is a pwr.AttrStat object
+# Returns:
+#   myGrpPwrStat: a pwr.Stat object
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Stat.Start} \label{meth:StatStart}
+
+This method starts the collection of real-time statistics on either the
+\texttt{pwr.Obj.Stat} or \texttt{pwr.Grp.Stat} object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrStat.Start()  # Start gathering real-time stats
+#
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Stat.Stop} \label{meth:StatStop}
+
+This method stops the collection of real-time statistics on either the
+\texttt{pwr.Obj.Stat} or \texttt{pwr.Grp.Stat} object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrStat.Stop()  # Stop gathering real-time stats
+#
+# this method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Stat.Clear} \label{meth:StatClear}
+
+This method resets the collection of real-time statistics on either the
+\texttt{pwr.Obj.Stat} or \texttt{pwr.Grp.Stat} object:
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+myPwrStat.Clear()
+#
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Stat.GetValue} \label{meth:StatGetValue}
+
+This method returns a named tuple describing the requested real-time statistic. Refer to
+\ref{meth:ObjAttrGetValue} on page \pageref{meth:ObjAttrGetValue} for details
+of the \texttt{InfoFromGet()} named tuple to access the information returned. The
+C API equivalent of this method is documented in section
+\ref{func:StatGetValue} on page \pageref{func:StatGetValue}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To return a single real-time statistic:
+myObjPwrStat = myPwrObj.CreateStat(pwr.AttrName.TEMP, pwr.AttrStat.MAX)
+myObjPwrStat.Start()  # Start gathering real-time stats
+# (Do something useful...)
+myObjPwrStat.Stop()   # Stop gathering real-time stats
+statInfo = myObjPwrStat.GetValue()
+# To access the results:
+statisticValue = statInfo.value
+statisticTimePeriod = statInfo.timestamp
+statisticErrorCode = statInfo.rc
+#
+# When a general failure occurs, a pwr.PwrError exception is raised.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Stat.GetValues} \label{meth:StatGetValues}
+
+This method returns a list containing Python named tuples describing real-time statistics across
+the objects of the \texttt{pwr.Grp} referenced in this \texttt{pwr.Stat} object.
+The C API equivalent of this method is documented in section
+\ref{func:StatGetValues} on page \pageref{func:StatGetValues}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# To return a real-time statistic across the objects of a pwr.Grp:
+myGrpPwrStat = myPwrGrp.CreateStat(pwr.AttrName.TEMP, pwr.AttrStat.MAX)
+myGrpPwrStat.Start()  # Start gathering real-time stats
+# (Do something useful...)
+myGrpPwrStat.Stop()  # Stop gathering real-time stats
+# Collect the statistics:
+statList = myGrpPwrStat.GetValues()
+for statInfo in statList:
+    # Access the results:
+    statisticValue = statInfo.value
+    statisticPwrObj = statInfo.obj
+    statisticTimePeriod = statInfo.timestamp
+    statisticErrorCode = statInfo.rc
+    # Process statistic...
+#
+# When a general failure occurs, a pwr.PwrError exception is raised.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+#   pwr.ReturnCode.BAD_VALUE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Stat.GetReduce} \label{meth:StatGetReduce}
+
+A reduction of a real-time statistic can be retrieved with the
+\texttt{pwr.Stat.GetReduce()} method. For a description of the reduction
+operation refer to the C API description of \texttt{PWR_StatGetReduce()} on page
+\pageref{func:StatGetReduce}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Get a reduction of real-time attribute values
+reduceOp = pwr.AttrStat.AVG
+reduceInfo = myGrpPwrStat.GetReduce(reduceOp)
+reduceValue = reduceInfo.value
+reduceTimePeriod = reduceInfo.timestamp
+reduceErrorCode = reduceInfo.rc
+# Where:
+#     reduceOp: AttrStat reduction operation to get
+# Returns:
+#     A named tuple of the attr, value, obj (group), timestamp, and rc.
+# This method will raise a PwrError exception when something goes wrong.
+# The possible exception errors are:
+#     ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method pwr.Grp.GetReduce} \label{meth:GrpGetReduce}
+
+A reduction of a historic statistic can be retrieved with the
+\texttt{pwr.Grp.GetReduce()} method. For a description of the reduction
+operation refer to the C API description of \texttt{PWR_GrpGetReduce()} on page
+\pageref{func:GrpGetReduce}.
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+# Get a reduction of historic attribute values
+import time
+attrName = pwr.AttrName.TEMP
+attrStat = pwr.AttrStat.MAX
+reduceOp = pwr.AttrStat.AVG
+endTime = Time(time.time())                                   # current time.
+timePeriod = timePeriod(start=(endTime-3600.0), end=endTime)  # 1 hour period
+reduceInfo = myPwrGrp.GetReduce(attrName, attrStat, reduceOp, timePeriod)
+reduceValue = reduceInfo.value
+reduceTimePeriod = reduceInfo.timestamp
+reduceErrorCode = reduceInfo.rc
+# Where:
+#     attrName: AttrName attribute for which to gather statistics
+#     attrStat: AttrStat historic statistic to gather
+#     reduceOp: AttrStat reduction operation over the objects in the group.
+#     timePeriod: pwr.TimePeriod period to get statistic.
+# Returns:
+#     A named tuple of the attr, value, obj (group), timestamp, and rc.
+# This method will raise a PwrError exception when something goes wrong.
+# The possible exception errors are:
+#     ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+
+%==============================================================================%
+\subsubsection{Method pwr.Stat.Destroy NOT_IMPLEMENTED}
+\label{meth:StatDestroy}
+
+There is no need for a ``Destroy'' method due to Python's garbage collection implementation.
+
+\subsection{Version Functions} \label{sec:PythonVersionFunctions}
+The top-level Version functions are not associated with any object. They return
+an integer detailing a particular segment of the version of the API. There also
+is an included \texttt{version} variable available to obtain a string version of the
+major/minor version number of the API
+
+%==============================================================================%
+\subsubsection{Method GetMajorVersion} \label{meth:GetMajorVersion}
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+majorVersion = pwr.GetMajorVersion()
+majorVersion = pwr.majorVersion      # Shortcut
+versionStr = pwr.version             # Gives "1.2" as example.
+#
+# This method raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+%==============================================================================%
+\subsubsection{Method GetMinorVersion} \label{meth:GetMinorVersion}
+
+\begin{center}\begin{minipage}{.95\linewidth}\begin{lstlisting}
+minorVersion = pwr.GetMinorVersion()
+minorVersion = pwr.minorVersion      # Shortcut
+#
+# These methods raises a pwr.PwrError exception when something goes wrong.
+# The possible exception errors are:
+#   pwr.ReturnCode.FAILURE
+\end{lstlisting}\end{minipage}\end{center}
+
+\subsection{Big List of Attributes} \label{sec:PythonBigListOfAttributes}
+
+The list of attributes for the default context is the same as the C API section
+\ref{sec:BLOA} starting on page \pageref{sec:BLOA}, with the attributes
+enumerated as defined in \ref{class:AttrName} on page \pageref{class:AttrName}.
+
+\subsection{Big List of Metadata} \label{sec:PythonBigListOfMetadata}
+
+The list of metadata names for the default context is the same as in the C API
+section \ref{sec:BLOM} on page \pageref{sec:BLOM}, with the attributes
+enumerated as defined in \ref{class:MetaName} on page \pageref{class:MetaName}.

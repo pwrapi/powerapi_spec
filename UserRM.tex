@@ -1,0 +1,45 @@
+The User/Resource Manger Interface is intended to support access to power and energy related information, specifically pertaining to jobs, relevant to an HPC user.
+This interface is similar to the User/Monitor and Control Interface (section \ref{sec:UserMC}) but in this case assumes that the Resource Manager has a data retention capability (database) available to query energy and statistics information based on job or user Id.
+The availability of this information is implementation dependent.
+Alternatively, if the Resource Manager does not have a database capability, the same interfaces are available to the user role through the User/Monitor and Control System Interface (section \ref{sec:UserMC} which may provide this functionality.
+
+\subsection{Supported Attributes}\label{sec:UserRMAttributes}
+The Power API specification does not currently recommend that any of the attributes be exposed to the user role. 
+The implementation is free to expose any attribute they determine is useful to the user role without violating the specification.
+
+\subsection{Supported Core (Common) Functions}\label{sec:UserRMSupportedCommon}
+
+\begin{itemize}[noitemsep,nolistsep] 
+	\item{Hierarchy Navigation Functions - section \ref{sec:Navigation}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Group Functions - section \ref{sec:Group}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Metadata Functions - section \ref{sec:METADATA}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL}
+		\end{itemize}
+	\item{Statistics Functions - section \ref{sec:StatisticsFunctions}}
+		\begin{itemize}[noitemsep,nolistsep] 
+			\item{ALL - for historic queries only}
+		\end{itemize}
+\end{itemize}
+
+%==============================================================================%
+
+\subsection{Supported High-Level (Common) Functions}\label{sec:UserRMHighLevel}
+
+\begin{itemize}[noitemsep,nolistsep] 
+	\item{Report Functions - section \ref{sec:ReportFunctions}}
+	\begin{itemize}[noitemsep,nolistsep] 
+		\item{ALL}
+	\end{itemize}
+\end{itemize}
+%==============================================================================%
+
+
+\subsection{Interface Specific Functions}\label{sec:UserRMFunctions}
+

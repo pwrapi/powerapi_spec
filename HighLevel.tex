@@ -1,0 +1,34 @@
+
+This chapter includes specifications for High-Level functions that are common for more than one of the Role/System pair interfaces specified in chapter \ref{chap:Interfaces}.
+The implementation may choose to selectively provide implementations for these functions, but all should be stubbed out or available.
+If an implementation is not provided the function should simply return \texttt{PWR_RET_NOT_IMPLEMENTED}.  
+
+
+
+\section{Report Functions}\label{sec:ReportFunctions}
+
+Report functions are intended to provide a number of Role/System pairs with the ability to produce a range of reports.
+These particular functions target historic data, typically data that has been recorded in logs or some type of database.
+These functions are considered High-Level and abstract the object and group concepts found in the Core functions.
+Information is requested based on higher level concepts such as job, application or user ID.
+These functions require the user to provide a context which is used for determining whether the calling user can access the requested data.
+
+
+%int PWR_GetReportByID( PWR_Cntxt context, const char* id, PWR_ID id_type, PWR_AttrName name, PWR_AttrStat stat, double* value, PWR_TimePeriod* ReportTimes );
+\begin{prototype}{GetReportByID}
+	\longdescription{The \texttt{PWR_GetReportByID} function is provided to allow the collection of statistics information based on the ID types defined in \texttt{PWR_ID} in Section \ref{type:ID}.  A \texttt{PWR_ID} type must be supplied with \texttt{char*} pointer pointing to a valid ID for the specified type.  The \texttt{PWR_AttrName, PWR_AttrStat} pair determines the statistic that will be reported.  For example, the user of this function might desire the maximum power used over a period of time one week prior to the current time.  The user would specify the \texttt{id}, \texttt{id_type}, \texttt{PWR_ATTR_POWER} for the attribute and \texttt{PWR_STAT_MAX} for the statistic and populate the \texttt{start} and \texttt{stop} members of the \texttt{PWR_TimePeriod} structure appropriately.  The times specified must be prior to the time when the function is called.  The function returns the actual start and stop times if they differ from the times the user inputs.  The implementation should return the time available time period that most closely matches the requested time period.  The implementation determines the supported attribute combinations.  The context of the calling user will determine if the user has the necessary privilege to access this information.  This functionality assumes the system has a data retention capability exposed to the user.}
+	\returntype{int}
+	\parameter{PWR_Cntxt context} 		{\pInput} 	{The calling user's context which can be used to determine data access for individual role/user combinations.}
+	\parameter{const char* id} 		{\pInput} 	{The ID that the statistic will be collected for.}
+	\parameter{PWR_ID id_type} 		{\pInput} 	{The type of ID used to interpret the ID input.}
+	\parameter{PWR_AttrName name} 		{\pInput} 	{The name of the attribute the statistic will be based on.}
+	\parameter{PWR_AttrStat stat} 		{\pInput} 	{The desired statistic.}
+	\parameter{double* value} 		{\pOutput} 	{Pointer to a double that will contain the statistic.}
+	\parameter{PWR_TimePeriod* ReportTimes} {\pInputOutput}	{The user specified window for the report (start and stop times must be specified).}
+
+	\returnval{PWR_RET_SUCCESS} 		{Upon SUCCESS}
+	\returnval{PWR_RET_FAILURE} 		{Upon FAILURE (Function is implemented but call failed)}
+	\returnval{PWR_RET_NOT_IMPLEMENTED} 	{Indicates that the combination of the attribute statistic pair and ID is not supported by this implementation.}
+\end{prototype}
+%==============================================================================%
+
