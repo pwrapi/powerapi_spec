@@ -1,8 +1,6 @@
 The following list contains changes to the community Power API specification version 2.1
 \begin{itemize}
-  \item{PWR_ObjGetName - Changed length input to a input/output and added text explaining how it can be used.
-         len now returns the length of the buffer returned or the length of the buffer that is needed if 
-         truncation has occurred. This allows for easier use of the function as the application can then call PWR_ObjGetName again with the correct length buffer.}
+  \item{PWR_ObjGetSizeName - New function added that allows the user to get the size of buffer required to successfully call PWR_ObjGetName for a given object.}
 
 \end{itemize}
 
