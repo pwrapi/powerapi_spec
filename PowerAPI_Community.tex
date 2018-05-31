@@ -11,6 +11,7 @@
 \usepackage{color}
 \usepackage[toc,page]{appendix}
 \usepackage{listings}
+\newcommand\Mark[1]{\textsuperscript#1}
 \lstset{ %
 	language=C,                		% choose the language of the code
 	columns= [l]fullflexible,
@@ -575,27 +576,38 @@
 %
 \title{High Performance Computing - Power Application Programming Interface Specification \\ Version \majorversion.\minorversion }
 
-\author{Editor: Barry Rountree, Lawrence Livermore National Laboratory \\
-\and Chair: Ryan E. Grant, Sandia National Laboratories\\
-\and Secretary: Jeff Hanson, Hewlett Packard Enterprise (HPE) \\ \\
-\and Contributors:  \\
-\and Chris Cantalupo (Intel), Jonathan Eastep (Intel),\\ 
-\and Scott Hara (Qualcomm), Siddhartha Jana (Intel),\\ 
-\and Jaymin Jasoliya (Intel), Matthew Kappel (Cray), \\ 
-\and James H. Laros III (SNL), Steve Leak (NERSC), \\ 
-\and Michael Levenhagen (SNL), Steve Martin (Cray), \\
-\and Ramakumar Nagappan (Intel), Kevin Pedretti (SNL), \\
-\and Todd Rosedahl (IBM), Andy Warner (HPE), \\
-\and Andrew Younge (SNL)} 
+\author{Chair: Ryan E. Grant\Mark{1} 
+\\ Editor: Barry Rountree\Mark{2} 
+\\ Secretary: Jeff Hanson\Mark{3} 
+\\ \\ Contributors:  
+\and Chris Cantalupo\Mark{4}, Jonathan Eastep\Mark{4}, 
+\and Scott Hara\Mark{5}, Siddhartha Jana\Mark{4},\\ 
+\and Jaymin Jasoliya\Mark{4}, Matthew Kappel\Mark{6}, \\ 
+\and James H. Laros III\Mark{1}, Steve Leak \Mark{7}, \\ 
+\and Michael Levenhagen\Mark{1}, Steve Martin\Mark{6}, \\
+\and Ramakumar Nagappan\Mark{4}, Kevin Pedretti\Mark{1}, \\
+\and Todd Rosedahl\Mark{8}, Andy Warner\Mark{3}, Andrew Younge\Mark{1}} 
 
 %
-\date{April 2018}
+\date{June 2018}
 % ---------------------------------------------------------------------------- %
 %
 % Start the document
 %
 \begin{document}
 \maketitle
+
+\noindent Contributing Organizations: \\
+\Mark{1} Sandia National Laboratories \\
+\Mark{2} Lawrence Livermore National Laboratory \\
+\Mark{3} Hewlett Packard Enterprise (HPE) \\
+\Mark{4} Intel \\
+\Mark{5} Qualcomm \\
+\Mark{6} Cray \\
+\Mark{7} NERSC \\
+\Mark{8} IBM \\
+
+
 \begin{abstract}
 Measuring and controlling the power and energy consumption of high performance computing systems by various components in the software stack is an active research area 
 ~\cite{6604474,6604496,
