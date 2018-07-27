@@ -123,7 +123,7 @@ This design choice was made in order to keep usage of the Power API as simple as
 %=============================================================================%
 %int    PWR_ObjGetName( PWR_Obj object, char* dest, size_t len );
 \begin{prototype}{ObjGetName}
-	\longdescription{The \texttt{PWR_ObjGetName} function copies the name of the specified object into the user provided buffer.  See page \pageref{func:CntxtGetObjByName} to get the object based on the unique name using \texttt{PWR_CntxtGetObjByName}.}
+	\longdescription{The \texttt{PWR_ObjGetName} function copies the name of the specified object into the user provided buffer. See page \pageref{func:CntxtGetObjByName} to get the object based on the unique name using \texttt{PWR_CntxtGetObjByName}.}
 	\returntype{int}
 	\parameter{PWR_Obj object}	{\pInput}	{The object that the user wishes to determine the name of.}
 	\parameter{char* dest}    	{\pInput}	{The address of the user provided buffer.}
@@ -132,6 +132,17 @@ This design choice was made in order to keep usage of the Power API as simple as
 	\returnval{PWR_RET_WARN_TRUNC} 	{Call succeeded, but the length of object name was longer than the provided buffer and the name was truncated.}
 	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
 \end{prototype}
+%=============================================================================%
+%int    PWR_ObjGetSizeOfName( PWR_Obj object, size_t len );
+\begin{prototype}{ObjGetSizeOfName}
+    \longdescription{The \texttt{PWR_ObjGetSizeOfName} returns the length of an object's name.  The len parameter will contain the length of the name of the specified object including any string terminators upon return. See page \pageref{func:CntxtGetObjByName} to get the object based on the unique name using \texttt{PWR_CntxtGetObjByName}.}
+    \returntype{int}
+    \parameter{PWR_Obj object}  {\pInput}   {The object that the user wishes to determine the name of.}
+    \parameter{size_t* len}     {\pInputOutput} {The length of the user provided buffer.}
+    \returnval{PWR_RET_SUCCESS}     {Upon SUCCESS, the len parameter will contain the size of buffer required to successfully call \texttt{PWR_ObjGetName}, including terminating null byte.}
+    \returnval{PWR_RET_FAILURE}     {Upon FAILURE.}
+\end{prototype}
+
 %==============================================================================%
 %int PWR_ObjGetParent( PWR_Obj object, PWR_Obj* parent );
 \begin{prototype}{ObjGetParent}
