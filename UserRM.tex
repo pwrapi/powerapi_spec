@@ -43,3 +43,15 @@ The implementation is free to expose any attribute they determine is useful to t
 
 \subsection{Interface Specific Functions}\label{sec:UserRMFunctions}
 
+%=============================================================================%
+%int    PWR_ObjGetName( PWR_Obj object, char* dest, size_t len );
+\begin{prototype}{NotifyToSystem}
+	\longdescription{The \texttt{PWR_NotifyToSystem} function provides data in a notification object to the system from the user level. This function is useful for reporting non-standard operating conditions to the higher level resource manager. For example, in the case where a job is being managed by an intelligent job manager, this function can report to the resource manager/scheduler that something has gone wrong with the job in the event that the job manager is incapable of providing this information.}
+	\returntype{int}
+	\parameter{PWR_Note note}	{\pInput}	{The notification that the  user wishes to transmit to the resource manager.}
+	\parameter{PWR_Obj agent_obj}    	{\pInput}	{The system object that is the target of the notification.}
+	\parameter{size_t len}    	{\pInput}	{The length of the user provided notification.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+

@@ -609,4 +609,59 @@ typedef enum {
 \end{minipage}
 \end{center}
 
+%==============================================================================%
+
+\subsubsection{PWR_NoteType}\label{type:NoteType}
+
+The \texttt{PWR_NoteType} type is generalized notification classification mechanism,
+allowing notifications to carry a basic type for handling at the target.
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_NOTE_FATAL_FAILURE = 0,
+        PWR_NOTE_JOB_FAILURE,
+        PWR_NOTE_RESTART,
+        PWR_NOTE_CAP_VIOLATION,
+        PWR_NOTE_NODE_FAILURE,
+        PWR_NOTE_NODE_UNRESPONSIVE,
+        PWR_NOTE_RESUME_NORMAL,
+        /* */
+        PWR_NOTE_INVALID       = -1,
+        PWR_NOTE_NOT_SPECIFIED = -2
+} PWR_NoteType; 
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+
+%==============================================================================%
+
+\subsubsection{PWR_Note}\label{type:Note}
+
+The \texttt{PWR_Note} type is a structure that encapsulates an entire desirable 
+notification between higher lever system layers and lower level interfaces. For example,
+such notifications can be passed between a resource manager and an indiviudal node, bypassing
+intermediate layers like a job manager and vice versa. \texttt{PWR_NoteType} must be a valid
+type as defined in section~\ref{type:NoteType}. The \texttt{note_details} field can contain a 
+string with additional information on the notification following the required notation from
+the sending/receving software. \texttt{source_id} should contain the source node's numbering,
+perferrably the Power API object ID.  
+
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef struct {
+        PWR_NoteType note;
+        uint64_t version;
+        char * note_details;
+        uint64_t note_len;
+        char * source_id;
+        uint64_t source_id_len;
+} PWR_Note;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
 
