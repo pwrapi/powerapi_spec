@@ -28,5 +28,6 @@ clean:
 		PowerAPI_Community.blg \
 		PowerAPI_Community.log \
 		PowerAPI_Community.out \
+		PowerAPI_Community.idx \
 		PowerAPI_Community.toc 
 
