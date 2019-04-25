@@ -225,7 +225,7 @@
 \def\attribute#1#2#3#4{
 	\edef\attriblist{%
 		\unexpanded\expandafter{\attriblist}%
-		\unexpanded{ \hline #1 \newline .\quad #2 \newline .\quad #3 & #4 \index{ATTR\_#1@\PWR{ATTR\_\uppercase{#1}}\textit{(attribute)}}\\ }%
+		\unexpanded{ \hline \PWR{ATTR\_#1} \newline .\quad #2 \newline .\quad #3 & #4 \index{ATTR\_#1@\PWR{ATTR\_\uppercase{#1}}\textit{(attribute)}}\\ }%
 	}%
 }
 
@@ -260,7 +260,7 @@
 \def\metadata#1#2#3#4{
 	\edef\attriblist{%
 		\unexpanded\expandafter{\attriblist}%
-		\unexpanded{ \hline #1 \newline .\quad #2 \newline .\quad #3 & #4 \index{MD\_#1@\PWR{MD\_\uppercase{#1}}\textit{(metadata)}}\\ }%
+		\unexpanded{ \hline \PWR{MD\_#1} \newline .\quad #2 \newline .\quad #3 & #4 \index{MD\_#1@\PWR{MD\_\uppercase{#1}}\textit{(metadata)}}\\ }%
 	}%
 }
 
