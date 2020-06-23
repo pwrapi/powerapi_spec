@@ -384,6 +384,32 @@ Information about each attribute can be obtained through the metadata interface,
 	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
 \end{prototype}
 %==============================================================================%
+%int PWR_ObjAttrTrackValue( PWR_Obj object, PWR_AttrName attr, const void* value );
+\begin{prototype}{ObjAttrStartTrackingValue}
+	\longdescription{The \texttt{PWR_ObjAttrTrackValue} function is provided to
+	start tracking for changes in the value of a single specified attribute (\texttt{PWR_AttrName attr}) of a single specified object (\texttt{PWR_Obj object}).}
+	\returntype{int}
+	\parameter{PWR_Obj object}	{\pInput}	{The target object.}
+	\parameter{PWR_AttrName attr}	{\pInput}	{The target attribute. See section \ref{type:AttrName} for a list of available attributes.}
+	\parameter{void* trackingptr}	{\pInput}	{Pointer to a fucntion to be called when the attribute changes.}
+	\parameter{PWR_AttrTracking type}	{\pInput}   {Specify \texttt{PWR_TRACKING_APIONLY} for changes
+	only done through the Power API or \texttt{PWR_TRACKING_POLL} for polling from any changes (warning polling may have adverse performance ramifications.}
+	\returnval{PWR_RET_SUCCESS} 			{Upon SUCCESS.}
+	\returnval{PWR_RET_NOT_IMPLEMENTED} 		{The requested attribute is not supported for the target object.}
+	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
+\end{prototype}
+%==============================================================================%
+%int PWR_ObjAttrSetValue( PWR_Obj object, PWR_AttrName attr, const void* value );
+\begin{prototype}{ObjAttrStopTrackingValue}
+	\longdescription{The \texttt{PWR_ObjAttrStopTrackingValue} function is provided to stop tracking the value of a single specified attribute (\texttt{PWR_AttrName attr}) of a single specified object (\texttt{PWR_Obj object}).}
+	\returntype{int}
+	\parameter{PWR_Obj object}	{\pInput}	{The target object.}
+	\parameter{PWR_AttrName attr}	{\pInput}	{The target attribute. See section \ref{type:AttrName} for a list of available attributes.}
+	\returnval{PWR_RET_SUCCESS} 			{Upon SUCCESS.}
+	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
+\end{prototype}
+
+%==============================================================================%
 %int PWR_StatusCreate( PWR_Cntxt context, PWR_Status* status );
 \begin{prototype}{StatusCreate}
 	\longdescription{The \texttt{PWR_StatusCreate} function is provided to create the \texttt{PWR_Status} object that will be used in functions that perform multiple operations and potentially return individual statuses for each operation.  It is up to the implementation to create the appropriate amount of storage for the \texttt{PWR_Status} structure based on the implementation and the number of statuses that will be held.  \texttt{PWR_Status} objects can only be used in the context in which they are created, attempting to use a \texttt{PWR_Status} object in a context other than the one it was created for will result in an error.  For example see \texttt{PWR_ObjAttrGetValues} on page \pageref{func:ObjAttrGetValues}.  Note, \texttt{PWR_Status} is an opaque handle, its backing definition is determined by the implementor (see \ref{sec:OpaqueTypes}).  It is intended that the implementation only allocate space for failed operations.  Errors are read from the \texttt{PWR_Status} by popping them off the structure which requires the structure to only be as large as the number of error returns require.  When status objects are passed into a function, they are automatically cleared, therefore errors should always be checked on a status object before reuse.  \emph{Note to Users: Caution is advised when reusing status objects in multiple threads. Common thread safety practices must be followed to ensure that errors are properly caught. Creating status objects for each thread is advised to avoid potential race conditions.}}

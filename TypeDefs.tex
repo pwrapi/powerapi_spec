@@ -161,7 +161,7 @@ The Attributes in \typerefx{AttrName} expose what we consider foundational measu
 Additional capabilities are and can be added using additional operations and often interface specific functions.
 
 The \typeref{AttrAccessError} type is used to hold the error returns that are popped from the \texttt{PWR_Status} handle (see section \ref{sec:OpaqueTypes}) using the \funcref{StatusPopError} function.
-
+The \typeref{AttrTracking} type is used to define the mode in which tracking the change for a given attribute is done, wither through the Power API only or polling to capture changes from all sources.
 %==============================================================================%
 
 \subsubsection{PWR_AttrName}\label{type:AttrName}
@@ -246,6 +246,23 @@ typedef enum {
 \end{lstlisting}
 \end{minipage}
 \end{center}
+
+%==============================================================================%
+
+\subsubsection{PWR_AttrTracking}\label{type:AttrTracking}
+\begin{center}
+\begin{minipage}{.95\linewidth}%
+\begin{lstlisting}
+typedef enum {
+        PWR_TRACKING_APIONLY,
+        PWR_TRACKING_POLL
+} PWR_AttrTracking;
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+
+
 %==============================================================================%
 %==============================================================================%
 %==============================================================================%
