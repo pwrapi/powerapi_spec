@@ -384,14 +384,15 @@ Information about each attribute can be obtained through the metadata interface,
 	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
 \end{prototype}
 %==============================================================================%
-%int PWR_ObjAttrTrackValue( PWR_Obj object, PWR_AttrName attr, const void* value );
+%int PWR_ObjAttrTrackValue( PWR_Obj object, PWR_AttrName attr, void* trackingptr, int id, PWR_AttrTracking type );
 \begin{prototype}{ObjAttrStartTrackingValue}
 	\longdescription{The \texttt{PWR_ObjAttrTrackValue} function is provided to
 	start tracking for changes in the value of a single specified attribute (\texttt{PWR_AttrName attr}) of a single specified object (\texttt{PWR_Obj object}).}
 	\returntype{int}
 	\parameter{PWR_Obj object}	{\pInput}	{The target object.}
 	\parameter{PWR_AttrName attr}	{\pInput}	{The target attribute. See section \ref{type:AttrName} for a list of available attributes.}
-	\parameter{void* trackingptr}	{\pInput}	{Pointer to a fucntion to be called when the attribute changes.}
+	\parameter{void* trackingptr}	{\pInput}	{Pointer to a function to be called when the attribute changes.}
+	\parameter{int id}              {\pInput}   {User defined ID value returned to callback function when attribute changes.}
 	\parameter{PWR_AttrTracking type}	{\pInput}   {Specify \texttt{PWR_TRACKING_APIONLY} for changes
 	only done through the Power API or \texttt{PWR_TRACKING_POLL} for polling from any changes (warning polling may have adverse performance ramifications.}
 	\returnval{PWR_RET_SUCCESS} 			{Upon SUCCESS.}
@@ -399,7 +400,7 @@ Information about each attribute can be obtained through the metadata interface,
 	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
 \end{prototype}
 %==============================================================================%
-%int PWR_ObjAttrSetValue( PWR_Obj object, PWR_AttrName attr, const void* value );
+%int PWR_ObjAttrStopTrackingValue( PWR_Obj object, PWR_AttrName attr );
 \begin{prototype}{ObjAttrStopTrackingValue}
 	\longdescription{The \texttt{PWR_ObjAttrStopTrackingValue} function is provided to stop tracking the value of a single specified attribute (\texttt{PWR_AttrName attr}) of a single specified object (\texttt{PWR_Obj object}).}
 	\returntype{int}
