@@ -395,6 +395,8 @@ Information about each attribute can be obtained through the metadata interface,
 	\parameter{int id}              {\pInput}   {User defined ID value returned to callback function when attribute changes.}
 	\parameter{PWR_AttrTracking type}	{\pInput}   {Specify \texttt{PWR_TRACKING_APIONLY} for changes
 	only done through the Power API or \texttt{PWR_TRACKING_POLL} for polling from any changes (warning polling may have adverse performance ramifications.}
+	\paramter{PWR_Time timestamp} {\pinput} {Time stamp of when change occured.}
+        \parameter{PWR_Threshold} {\pinput} {Threshold of change in average value before callback is triggered.}
 	\returnval{PWR_RET_SUCCESS} 			{Upon SUCCESS.}
 	\returnval{PWR_RET_NOT_IMPLEMENTED} 		{The requested attribute is not supported for the target object.}
 	\returnval{PWR_RET_FAILURE} 			{Upon FAILURE.}
