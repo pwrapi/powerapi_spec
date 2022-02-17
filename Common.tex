@@ -18,7 +18,7 @@ Core, or so called Common, interface functions are functions that can be used, a
 Core functions include the following areas:
 \begin{itemize}[noitemsep,nolistsep] 
 \item{\textbf{Initialization}, required to use any of the functionality described in this specification, }
-\item{\textbf{Navigation}  functions allow the user to traverse the system description and discover information about the underlying platform, }
+\item{\textbf{Navigation}  functions allow the user to traverse the system description and discover information about the underlying facility/platform, }
 \item{\textbf{Group} functions, primarily a convenience abstraction,}
 \item{\textbf{Attribute} functions expose measurement and control functionality, }
 \item{\textbf{Metadata} functions allow the user to access additional information about objects and attributes (often device or instrumentation specific information), }
@@ -146,7 +146,7 @@ This design choice was made in order to keep usage of the Power API as simple as
 %==============================================================================%
 %int PWR_ObjGetParent( PWR_Obj object, PWR_Obj* parent );
 \begin{prototype}{ObjGetParent}
-	\longdescription{The \texttt{PWR_ObjGetParent} function is used to find the object immediately above the specified object in the system description available to the user through the current context.  Note, currently, there are some cases where an object has no parent, namely the platform object.}
+	\longdescription{The \texttt{PWR_ObjGetParent} function is used to find the object immediately above the specified object in the system description available to the user through the current context.  Note, currently, there are some cases where an object has no parent, namely the facility object.}
 	\returntype{int}
 	\parameter{PWR_Obj object} {\pInput} 		{The object that the user wishes to determine the parent of.}
 	\parameter{PWR_Obj* parent}{\pOutput}		{The parent object of the specified input object.}
@@ -555,7 +555,7 @@ these informational strings, especially the \texttt{PWR\_MD\_VENDOR\_INFO}
 string, is for a Power API user to capture these strings with each run
 to record configuration and provenance information.  For example, a
 user may chose to log the \texttt{PWR\_MD\_VENDOR\_INFO} string for
-the top-level platform object in the output of each run.
+the top-level platform or facility object in the output of each run.
 
 The metadata interface consists of three functions. The
 \texttt{PWR_ObjAttrGetMeta} and \texttt{PWR_ObjAttrSetMeta} functions allow
