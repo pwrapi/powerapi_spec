@@ -128,7 +128,7 @@ To summarize the requirements:
 	All object types in this specification must be defined in any implementation. The use of the object types, with the exception of the \texttt{Platform} object type, is optional.
 	}
 	\item{
-	Objects can only have one parent but may have many children. Currently the \texttt{Facility} object has no parent as it represents the top of the system description.
+	Objects can have at most one parent but may have many children. Currently the \texttt{Facility} object has no parent as it represents the top of the system description.
 	}
         \item{
         If an implementation chooses to add objects not defined in the specification they should only be exposed to the user in a vendor specific context to avoid unpredictable or non-portable behaviour (see \funcref{CntxtInit}).
