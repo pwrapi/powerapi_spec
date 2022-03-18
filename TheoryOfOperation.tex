@@ -48,7 +48,7 @@ Roles represent the different types of users that exist which include:
 \item{\textbf{Application}  The application or application library executing on the compute resource. May also include run-time components running in user space.}
 \item{\textbf{Monitor and Control}  Cluster management or Reliability Availability and Serviceability (RAS) systems, for example.}
 \item{\textbf{Operating System} Linux or specialized Light Weight Kernels which are found on HPC platforms and potentially portions of run-time systems. }
-\item{\textbf{User} The user of the HPC platform. }
+\item{\textbf{User} The user of the HPC facility, typically using one platform but potentially using multiple platforms. }
 \item{\textbf{Resource Manager} This can include work load managers, schedulers, allocators and even portions of run-time systems. }
 \item{\textbf{Administrator} The system administrator or HPC facility/platform manager. }
 \item{\textbf{HPCS Manager} The individual or individuals responsible for managing policy for the HPC facility and platforms, for example. }
@@ -111,8 +111,10 @@ All object types listed in the specification must be defined by any implementati
 The implementation chooses which objects will be employed in the system description and how they will be arranged.
 An object can only have a single parent but may have multiple children.
 A system description may describe more than a single platform as a facility object where the facility object has multiple objects of type \texttt{Platform} and the facility represents the top of the hierarchy. 
-Due to the large number of variations in software, hardware and security profiles between platforms and the difficulty in providing a universal Power API implementation that would work between any and all platforms, control over platform objects is confined to within that platform object or above in the hierarchy at the facility level. 
-For example, a compute node in a given platform cannot query or modify the CPU frequency of a object on another platform. However, that compute node could query the facility object to inquire about the overall facility power usage. 
+Due to the large number of variations in software, hardware and security profiles between platforms and the difficulty in providing a universal Power API implementation that would work between any and all platforms, control over platform objects is confined to within that platform object. 
+Power API contexts initialized below the facility level (platform or lower in the system hierarchy) can only read attributes at the facility level, not modify them.
+For example, a compute node in a given platform cannot query or modify the CPU frequency of a object on another platform. 
+However, that compute node could query (it can only read attributes, not modify them at the facility level) the facility object to inquire about the overall facility power usage if security policies allow such queries. 
 A user with a role initialized at the facility level is meant to interact with high-level platform objects, it is not intended for low-level object control (i.e. controlling per socket power budgets). Such low level controls should be done with roles initialized at the platform level.
 While figure \ref{fig:BaseSystemMap} depicts a homogeneous system description, homogeneity is \textit{not} a requirement. 
 In practice a system description can be heterogeneous and unbalanced.
