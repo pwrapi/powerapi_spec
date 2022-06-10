@@ -11,7 +11,7 @@ This section discusses many of the foundational concepts leveraged throughout th
 It should be noted that many terms commonly used when discussing object oriented languages are used in this section and the document as a whole.
 The use of these terms in no way implies that the Power API specification must be implemented using an object oriented language.
 %The authors of this specification in fact, recommend the contrary.
-We have attempted to achieve two goals, listed in order of priority: 1) programmer portability, where the programmer is the user of the API, and 2) the latitude of the implementor who will often become the user of the API benefitting from our first priority. 
+We have attempted to achieve two goals, listed in order of priority: 1) programmer portability, where the programmer is the user of the API, and 2) the latitude of the implementor who will often become the user of the API benefiting from our first priority. 
 
 %=============================================================================%
 %=============================================================================%
@@ -24,7 +24,7 @@ We have attempted to achieve two goals, listed in order of priority: 1) programm
 
 
 Using any of the Power API interfaces requires initialization. 
-Initializaton returns a context.
+Initialization returns a context.
 In the specification, the context is defined as an opaque pointer.
 This approach was taken to allow the maximum amount of flexibility to the implementor.
 The context returned will contain (act as the entry point to) the system description that is exposed to the user, all policy and privilege information, basically everything the user of the API requires to perform the functionality specified by the API.
@@ -48,11 +48,11 @@ Roles represent the different types of users that exist which include:
 \item{\textbf{Application}  The application or application library executing on the compute resource. May also include run-time components running in user space.}
 \item{\textbf{Monitor and Control}  Cluster management or Reliability Availability and Serviceability (RAS) systems, for example.}
 \item{\textbf{Operating System} Linux or specialized Light Weight Kernels which are found on HPC platforms and potentially portions of run-time systems. }
-\item{\textbf{User} The user of the HPC platform. }
+\item{\textbf{User} The user of the HPC facility, typically using one platform but potentially using multiple platforms. }
 \item{\textbf{Resource Manager} This can include work load managers, schedulers, allocators and even portions of run-time systems. }
-\item{\textbf{Administrator} The system administrator or HPC platform manager. }
-\item{\textbf{HPCS Manager} The individual or individuals responsible for managing policy for the HPC platform, for example. }
-\item{\textbf{Accounting} Individual or software that produces reports of metrics for the HPC platform. }
+\item{\textbf{Administrator} The system administrator or HPC facility/platform manager. }
+\item{\textbf{HPCS Manager} The individual or individuals responsible for managing policy for the HPC facility and platforms, for example. }
+\item{\textbf{Accounting} Individual or software that produces reports of metrics for the HPC facility and associated platforms. }
 \end{itemize}
 These brief definitions are not meant to be exhaustive.
 Roles are analogous with the \textit{Actors} discussed in section \ref{sec:UseCase}.
@@ -106,26 +106,29 @@ Roles are also provided as a mechanism for the implementation to express priorit
 \end{figure}
 
 The system description is the \textit{view} of the system exposed to the user upon initialization via the context that is returned.
-Figure \ref{fig:BaseSystemMap} depicts an example of a system description showing a hierarchical arrangement of objects.
+Figure \ref{fig:BaseSystemMap} depicts an example of a system description showing a hierarchical arrangement of objects where there is only one platform.
 All object types listed in the specification must be defined by any implementation, but do not have to be used in the system description.
 The implementation chooses which objects will be employed in the system description and how they will be arranged.
 An object can only have a single parent but may have multiple children.
-Currently, a system description may only describe a single platform and have a single object of type \texttt{Platform} which represents the top of the hierarchy. 
-Later revisions of the specification may include the ability to combine multiple platforms in the system description. 
-This might be useful, for example, in representing an entire datacenter. 
+A system description may describe more than a single platform as a facility object where the facility object has multiple objects of type \texttt{Platform} and the facility represents the top of the hierarchy. 
+Due to the large number of variations in software, hardware and security profiles between platforms and the difficulty in providing a universal Power API implementation that would work between any and all platforms, control over platform objects is confined to within that platform object. 
+Power API contexts initialized below the facility level (platform or lower in the system hierarchy) can only read attributes at the facility level, not modify them.
+For example, a compute node in a given platform cannot query or modify the CPU frequency of a object on another platform. 
+However, that compute node could query (it can only read attributes, not modify them at the facility level) the facility object to inquire about the overall facility power usage if security policies allow such queries. 
+A user with a role initialized at the facility level is meant to interact with high-level platform objects, it is not intended for low-level object control (i.e. controlling per socket power budgets). Such low level controls should be done with roles initialized at the platform level.
 While figure \ref{fig:BaseSystemMap} depicts a homogeneous system description, homogeneity is \textit{not} a requirement. 
 In practice a system description can be heterogeneous and unbalanced.
 
 To summarize the requirements:
 \begin{itemize}[noitemsep,nolistsep] %
 	\item{
-	The \texttt{Platform} object type must be defined by the implementation and must appear at the top of the system description.
+	At least one \texttt{Platform} object type must be defined by the implementation and may appear at the top of the system description or immediately underneath a facility object.
 	}
 	\item{
 	All object types in this specification must be defined in any implementation. The use of the object types, with the exception of the \texttt{Platform} object type, is optional.
 	}
 	\item{
-	Objects can only have one parent but may have many children. Currently the \texttt{Platform} object has no parent since it appears at the top of the system description. This will likely change in future versions of the specification.
+	Objects can have at most one parent but may have many children. Currently the \texttt{Facility} object has no parent as it represents the top of the system description.
 	}
         \item{
         If an implementation chooses to add objects not defined in the specification they should only be exposed to the user in a vendor specific context to avoid unpredictable or non-portable behaviour (see \funcref{CntxtInit}).
@@ -141,7 +144,15 @@ To summarize the requirements:
 The following is a list of the object types currently included in the specification along with a short description of each.
 \begin{itemize}[noitemsep,nolistsep] %
 	\item{
-Platform - Currently, the one and only Platform object is the top level object of the system description exposed to the user of the API. 
+Facility - The Facility object is the highest level object allowed in a system description. 
+It represents an entire computing facility that may be made up of multiple platforms.
+Facility objects are useful for including resources like cooling or power delivery that may be shared by multiple platforms.
+Facility objects are not necessarily traversible between users on different platforms. 
+That is, users may not be able to interact or even discover other platforms within the same facility.
+} 
+        \item{
+Platform - A Platform object is the top level object of the system description exposed to a typical user of the API.
+It represents one of the main system divisions in a given compute facility and may be the highest level object in facilities that have only one platform. 
 The Platform object is intended to conceptually represent the entire Platform.
 For example, if the Platform object has a power or energy measurement or control capability exposed through the Platform objects attributes the scope of these attributes should be platform wide.
 }
@@ -230,7 +241,7 @@ The following is the list of global attributes:
 
 Note, in the list above all the attributes are implicit. 
 Explicit attributes are defined in the \typeref{AttrName} type definition.
-The majority of the attributes defined in the specification, and likely those added by an implementator, are, and will be, explicit.
+The majority of the attributes defined in the specification, and likely those added by an implementor, are, and will be, explicit.
 The implicit attributes defined above are primarily used for navigation and are accessed through attribute specific functions which are described in Section \ref{sec:Navigation}.
 
 Explicit attributes are either accessed through the generic attribute interface (Section \ref{sec:Attributes}) or attribute specific functions found in either the section describing the specific interface in which they are used or in Chapter \ref{chap:Common}, \textit{Core (Common) Interface Functions}.
