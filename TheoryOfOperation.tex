@@ -157,6 +157,11 @@ The Platform object is intended to conceptually represent the entire Platform.
 For example, if the Platform object has a power or energy measurement or control capability exposed through the Platform objects attributes the scope of these attributes should be platform wide.
 }
 	\item{
+CDU - A Cooling Distribution Unit object represents cooling infrastructure that is part of a facility associated with a platform. The CDU object is intended to be used
+for liquid cooling controls and measurements. The CDU object is not strictly between the platform and cabinet objects in the object hierarchy. They can be placed wherever
+makes sense for a given cooling solution for a platform.
+}
+	\item{
 Cabinet - Objects of type Cabinet are intended to represent the cabinets or racks that act as enclosures (or logical groupings) for the platform equipment. 
 Beyond the utility of convenient groups of lower level objects (equipment) cabinets may have power or energy relevant capabilities which can be exposed through attributes associated with each Cabinet object. 
 }

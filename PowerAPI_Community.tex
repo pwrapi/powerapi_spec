@@ -413,60 +413,74 @@
 
 % The remainder of the macros are for text repeated across several tables.
 \newcommand{\aPstateDesc}{%
-	\attribute{PstateDesc}		{ \aGS }{ \uint }{ The current P-state for the object specified (typically processors but for use with other component types when applicable).  }%
+	\attribute{Pstate}		{ \aGS }{ \uint }{ The current P-state for the object specified (typically processors but for use with other component types when applicable).  }%
 }
 \newcommand{\aCstateDesc}{%		
-	\attribute{CstateDesc}		{ \aGS }{ \uint }{ The current C-state for the object specified (typically processors but for use with other component types when applicable).  }%
+	\attribute{Cstate}		{ \aGS }{ \uint }{ The current C-state for the object specified (typically processors but for use with other component types when applicable).  }%
 }
 \newcommand{\aCstateLimitDesc}{%
-	\attribute{CstateLimitDesc}	{\aGS}{\uint}{The lowest C-state allowed for the object specified (typically processors but for use with other component types when applicable).}%
+	\attribute{CstateLimit}	{\aGS}{\uint}{The lowest C-state allowed for the object specified (typically processors but for use with other component types when applicable).}%
 }
 \newcommand{\aSstateDesc}{%
-	\attribute{SstateDesc}		{\aGS}{\uint}{The current S-state for the object specified (typically processors but for use with other component types when applicable).}%
+	\attribute{Sstate}		{\aGS}{\uint}{The current S-state for the object specified (typically processors but for use with other component types when applicable).}%
 }
 \newcommand{\aPowerDesc}{%		
-	\attribute{PowerDesc}		{\aG }{\dbl }{Discrete power value in watts. The power value should be the value measured as close as possible to the time of the function call.}%
+	\attribute{Power}		{\aG }{\dbl }{Discrete power value in watts. The power value should be the value measured as close as possible to the time of the function call.}%
 }
 \newcommand{\aCurrentDesc}{%
-	\attribute{CurrentDesc}		{\aG }{\dbl }{Discrete current value in amps. The current value should be the value measured as close as possible to the time of the function call.}%
+	\attribute{Current}		{\aG }{\dbl }{Discrete current value in amps. The current value should be the value measured as close as possible to the time of the function call.}%
 }
 \newcommand{\aVoltageDesc}{%
-	\attribute{VoltageDesc}		{\aG }{\dbl }{Discrete voltage value in volts. The voltage value should be the value measured as close as possible to the time of the function call.}%
+	\attribute{Voltage}		{\aG }{\dbl }{Discrete voltage value in volts. The voltage value should be the value measured as close as possible to the time of the function call.}%
 }
 \newcommand{\aMaxPowerDesc}{%		
-	\attribute{MaxPowerDesc}	{\aGS}{\dbl }{Maximum power limit (ceiling, upper bound) for the specified object (as in power cap) in watts.}%
+	\attribute{MaxPower}	{\aGS}{\dbl }{Maximum power limit (ceiling, upper bound) for the specified object (as in power cap) in watts.}%
 }
 \newcommand{\aMinPowerDesc}{%
-	\attribute{MinPowerDesc}	{\aGS}{\dbl }{Minimum power limit (floor, lower bound) for the specified object in watts.}%
+	\attribute{MinPower}	{\aGS}{\dbl }{Minimum power limit (floor, lower bound) for the specified object in watts.}%
 }
 \newcommand{\aFreqLimitMinDesc}{%	
-	\attribute{FreqLimitMinDesc}	{\aGS}{\dbl }{Minimum operating frequency limit for the specified object in Hz (cycles per second).}%
+	\attribute{FreqLimitMin}	{\aGS}{\dbl }{Minimum operating frequency limit for the specified object in Hz (cycles per second).}%
 }
 \newcommand{\aFreqLimitMaxDesc}{%
-	\attribute{FreqLimitMaxDesc}	{\aGS}{\dbl }{Maximum operating frequency limit for the specified object in Hz (cycles per second).}%
+	\attribute{FreqLimitMax}	{\aGS}{\dbl }{Maximum operating frequency limit for the specified object in Hz (cycles per second).}%
 }
 \newcommand{\aFreqDesc}{%
-	\attribute{FreqDesc}		{\aGS}{\dbl }{The current operating frequency value for the specified object in Hz (cycles per second).}
+	\attribute{Freq}		{\aGS}{\dbl }{The current operating frequency value for the specified object in Hz (cycles per second).}
 }
 \newcommand{\aEnergyDesc}{%
-	\attribute{EnergyDesc}		{\aG }{\dbl }{The cumulative energy used by the specified object in joules. Note that two attribute get calls are typically required to obtain the energy consumed by the specified object. Subtracting the energy value obtained from the first call from the energy value obtained from the second call produces the energy used for the object from the timestamp of the first value through the timestamp of the second value.}%
+	\attribute{Energy}		{\aG }{\dbl }{The cumulative energy used by the specified object in joules. Note that two attribute get calls are typically required to obtain the energy consumed by the specified object. Subtracting the energy value obtained from the first call from the energy value obtained from the second call produces the energy used for the object from the timestamp of the first value through the timestamp of the second value.}%
 }
 \newcommand{\aTempDesc}{%
-	\attribute{TempDesc}		{\aG }{\dbl }{The current temperature value for the specified object in degrees Celsius.}%
+	\attribute{Temp}		{\aG }{\dbl }{The current temperature value for the specified object in degrees Celsius.}%
 }
 \newcommand{\aOSIdDesc}{%	
-	\attribute{OSIdDesc}		{\aG }{\dbl }{The operating system ID that corresponds to the object. For example, a runtime system may need to figure out which Power API \texttt{PWR\_OBJ\_CORE} objects correspond to the cores that it is controlling. This attribute provides a linkage between Power API objects and operating system IDs.}%
+	\attribute{OSId}		{\aG }{\dbl }{The operating system ID that corresponds to the object. For example, a runtime system may need to figure out which Power API \texttt{PWR\_OBJ\_CORE} objects correspond to the cores that it is controlling. This attribute provides a linkage between Power API objects and operating system IDs.}%
 }
 \newcommand{\aThrottledIdDesc}{%		
-	\attribute{ThrottledIdDesc}	{\aG }{\dbl }{The cumulative time in nanoseconds that the specified object's performance was purposefully slowed in order to meet some constraint, such as a power cap.  }%
+	\attribute{ThrottledId}	{\aG }{\dbl }{The cumulative time in nanoseconds that the specified object's performance was purposefully slowed in order to meet some constraint, such as a power cap.  }%
 }
 \newcommand{\aThrottledCountIdDesc}{%	
-	\attribute{ThrottledCountIdDesc}{\aG }{\dbl }{The cumulative count of the number of times that the specified object's performance was purposefully slowed in order to meet some constraint, such as a power cap.}%
+	\attribute{ThrottledCountId}{\aG }{\dbl }{The cumulative count of the number of times that the specified object's performance was purposefully slowed in order to meet some constraint, such as a power cap.}%
 }
 \newcommand{\aGovDesc}{%
-	\attribute{GovDesc}		{\aG }{\dbl }{Power related governor capability exposed through the operating system interface.}
+	\attribute{Gov}		{\aG }{\dbl }{Power related governor capability exposed through the operating system interface.}
 }
-
+\newcommand{\aWaterFlowDesc}{%
+	\attribute{WaterFlow}		{\aG }{\dbl }{The current water flow rate in Litres per minute.}
+}
+\newcommand{\aDewPointDesc}{%
+	\attribute{DewPoint}		{\aG }{\dbl }{The dew point temperature in degrees Celsius.}
+}
+\newcommand{\aPumpSpeedDesc}{%
+	\attribute{PumpSpeed}		{\aG }{\dbl }{The current speed of a pump expressed in percentage of maximum speed.}
+}
+\newcommand{\aPressureDiffDesc}{%
+	\attribute{PressureDiff}		{\aG }{\dbl }{The liquid pressure differential at the object expressed in kPa.}
+}
+\newcommand{\aValvePositionDesc}{%
+	\attribute{Valve Position}		{\aG }{\dbl }{The current valve position of the associated liquid valve.}
+}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% The big list of metadata
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
