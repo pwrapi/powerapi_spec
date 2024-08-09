@@ -577,9 +577,78 @@
 %------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 %\texttt{PWR\_MD\_MEASURE\_METHOD}      & Get     & uint64_t   & Denotes the measurement method: an actual measurement (returned value = 0) or a model based estimate (return value = 1). Other values $> 1$ may be used to denote multiple vendor specific models in the situation where multiple models may exist. \\
 \newcommand{\mMeasureMethod}{%
-	\metadata{measure\_method}	{\aG}{\ptrchar}{Denotes the measurement method: an actual measurement (returned value = 0) or a model based estimate (return value = 1). Other values $> 1$ may be used to denote multiple vendor specific models in the situation where multiple models may exist.}%
+	\metadata{measure\_method}	{\aG}{\uint}{Denotes the measurement method: an actual measurement (returned value = 0) or a model based estimate (return value = 1). Other values $> 1$ may be used to denote multiple vendor specific models in the situation where multiple models may exist.}%
 }
 %------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_RES\_CAP}      & Get     & uint64_t   & The capacity of the liquid resevoir of the object.\\
+\newcommand{\mLiquidResCap}{%
+	\metadata{liquid\_res\_cap}	{\aG}{\uint}{Denotes the liquid resevoir capacity in Litres.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_TYPE}      & Get     & char *   & The type of liquid in the cooling infrastructure for the object.\\
+\newcommand{\mLiquidType}{%
+	\metadata{liquid\_type}		{\aG}{\ptrchar}{Information string describing the liquid cooling fluid type.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_MAX\_PUMP\_FLOW}      & Get     & double   & The maxmium flow rate of the pump closest to the object.\\
+\newcommand{\mLiquidMaxPumpFlow}{%
+	\metadata{liquid\_max\_pump\_flow}	{\aG}{\dbl}{Denotes the maximum flow rate in Litres.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_MIN\_PUMP\_FLOW}      & Get     & double   & The minimum flow rate of the pump closest to the object.\\
+\newcommand{\mLiquidMinPumpFlow}{%
+	\metadata{liquid\_min\_pump\_flow}	{\aG}{\dbl}{Denotes the minimum flow rate in Litres.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_RECOMMENDED\_PUMP\_FLOW}      & Get     & double   & The vendor recommended flow rate of the pump closest to the object.\\
+\newcommand{\mLiquidRecommendedPumpFlow}{%
+	\metadata{liquid\_recommended\_pump\_flow}	{\aG}{\dbl}{Denotes the recommended flow rate in Litres.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_MAX\_TEMP}      & Get     & double   & The maxmium temperature of the cooling liquid.\\
+\newcommand{\mLiquidMaxTemp}{%
+	\metadata{liquid\_max\_temp}	{\aG}{\dbl}{Denotes the maximum temperature in degrees celcius.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_MIN\_TEMP}      & Get     & double   & The minimum temperature of the cooling liquid.\\
+\newcommand{\mLiquidMinTemp}{%
+	\metadata{liquid\_min\_temp}	{\aG}{\dbl}{Denotes the minimum temperature in degrees celcius.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%\texttt{PWR\_MD\_LIQUID\_MAX\_PRESSUE}      & Get     & double   & The maxmium pressure in the cooling liquid line.\\
+\newcommand{\mLiquidMaxPressure}{%
+	\metadata{liquid\_max\_pressure}	{\aG}{\dbl}{Denotes the maximum pressue in Bar or PSI?????.}%
+}
+%------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+% PWR_MD_LIQUID_RES_CAP,   
+%        PWR_MD_LIQUID_TYPE,
+%        PWR_MD_LIQUID_MAX_PUMP_FLOW,
+%        PWR_MD_LIQUID_MIN_PUMP_FLOW,
+%        PWR_MD_LIQUID_RECOMMENED_PUMP_FLOW,
+%        PWR_MD_LIQUID_MAX_TEMP,
+%        PWR_MD_LIQUID_MIN_TEMP,
+%        PWR_MD_LIQUID_MAX_PRESSURE,
+
+
 
 % End Macro definitions
    
