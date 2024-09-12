@@ -472,14 +472,17 @@
 \newcommand{\aDewPointDesc}{%
 	\attribute{DewPoint}		{\aG }{\dbl }{The dew point temperature in degrees Celsius.}
 }
+\newcommand{\aHumidityDesc}{%
+	\attribute{Humidity}		{\aG }{\dbl }{The current relative humidity in percentage.}
+}
 \newcommand{\aPumpSpeedDesc}{%
-	\attribute{PumpSpeed}		{\aG }{\dbl }{The current speed of a pump expressed in percentage of maximum speed.}
+	\attribute{PumpSpeed}		{\aGS }{\dbl }{The current speed of a pump expressed in percentage of maximum speed.}
 }
 \newcommand{\aPressureDiffDesc}{%
 	\attribute{PressureDiff}		{\aG }{\dbl }{The liquid pressure differential at the object expressed in kPa.}
 }
 \newcommand{\aValvePositionDesc}{%
-	\attribute{Valve Position}		{\aG }{\dbl }{The current valve position of the associated liquid valve.}
+	\attribute{Valve Position}		{\aGS }{\dbl }{The current valve position of the associated liquid valve.}
 }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% The big list of metadata
@@ -625,7 +628,7 @@
 %------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 %\texttt{PWR\_MD\_LIQUID\_MAX\_PRESSUE}      & Get     & double   & The maxmium pressure in the cooling liquid line.\\
 \newcommand{\mLiquidMaxPressure}{%
-	\metadata{liquid\_max\_pressure}	{\aG}{\dbl}{Denotes the maximum pressue in Bar or PSI?????.}%
+	\metadata{liquid\_max\_pressure}	{\aG}{\dbl}{Denotes the maximum pressue in kPa.}%
 }
 %------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
