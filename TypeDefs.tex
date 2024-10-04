@@ -131,6 +131,7 @@ typedef enum {
         PWR_OBJ_MEM,
         PWR_OBJ_NIC,
         PWR_OBJ_HT,
+	PWR_OBJ_CDU,
         PWR_NUM_OBJ_TYPES,
         /* */
         PWR_OBJ_INVALID       = -1,
@@ -287,7 +288,15 @@ typedef enum {
         PWR_MD_VENDOR_INFO_LEN,   /* uint64_t, max strlen of PWR_MD_VENDOR_INFO */
         PWR_MD_VENDOR_INFO,       /* char *, C-style NULL-terminated ASCII string */
         PWR_MD_MEASURE_METHOD,    /* uint64_t, 0/1 depending on real/model mesurement */
-        PWR_NUM_META_NAMES,
+        PWR_MD_LIQUID_RES_CAP,    /* uint64_t */
+        PWR_MD_LIQUID_TYPE,	  /* char *, C-style NULL-terminated ASCII string */
+        PWR_MD_LIQUID_MAX_PUMP_FLOW, /* double */
+        PWR_MD_LIQUID_MIN_PUMP_FLOW, /* double */
+        PWR_MD_LIQUID_RECOMMENED_PUMP_FLOW, /* double */
+        PWR_MD_LIQUID_MAX_TEMP,   /* double, degrees Celcius */
+        PWR_MD_LIQUID_MIN_TEMP,   /* double, degrees Celcius */
+        PWR_MD_LIQUID_MAX_PRESSURE, /* double, PSI */
+        PWR_NUM_META_NAMES,	/* uint64_t */
         /* */
         PWR_MD_INVALID       = -1,
         PWR_MD_NOT_SPECIFIED = -2

@@ -198,6 +198,12 @@ It is the responsibility of the user to clean up all groups produced as a result
 Groups can only contain objects from a single \texttt{PWR_cntxt}.
 Group operations that involve multiple groups must be performed with groups from the same context.
 
+Some groups may be created automatically by an implementation for the convenience of the user. Examples of such groups include
+a group of nodes assigned to a job or a group of objects being cooled by a CDU object. An implementation may choose to provide
+a group (or groups) to represent which CDUs overlap so that failures in a single CDU can be compensated for by other existing CDUs.
+Having such redundancy groups provides opportunities for users to determine if CDU failures can be compensated for by adjusting
+existing CDU capacity or if they require other actions to ameliorate. 
+
 %int PWR_GrpCreate( PWR_Cntxt context, PWR_Grp* group );
 \begin{prototype}{GrpCreate}
 	\longdescription{The \texttt{PWR_GrpCreate} function is used to create a new group which will be associated with and unique to the users context.}
@@ -865,6 +871,12 @@ The attributes valid for specific interfaces are listed in the appropriate secti
 \aThrottledIdDesc
 \aThrottledCountIdDesc
 \aGovDesc
+\aWaterFlowDesc
+\aDewPointDesc
+\aHumidityDesc
+\aPumpSpeedDesc
+\aPressureDiffDesc
+\aValvePositionDesc
 \end{attributetable}
 
 %==============================================================================%
@@ -897,6 +909,14 @@ The attributes valid for specific interfaces are listed in the appropriate secti
 \mVendorInfoLen
 \mVendorInfo
 \mMeasureMethod
+\mLiquidResCap
+\mLiquidType
+\mLiquidMaxPumpFlow
+\mLiquidMinPumpFlow
+\mLiquidRecommendedPumpFlow
+\mLiquidMaxTemp
+\mLiquidMinTemp
+\mLiquidMaxPressure
 \end{attributetable}
 
 %%%\begin{center}
