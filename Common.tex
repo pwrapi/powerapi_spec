@@ -23,6 +23,7 @@ Core functions include the following areas:
 \item{\textbf{Attribute} functions expose measurement and control functionality, }
 \item{\textbf{Metadata} functions allow the user to access additional information about objects and attributes (often device or instrumentation specific information), }
 \item{\textbf{Statistics} functions are used to generate statistical information based on fundamental attribute information (measurements),}
+\item{\textbf{Agents} functions that are used to register agent code for a given object to receive notifications sent to that object,}
 \end{itemize}
 and other functionality that is common across a number of interfaces.
 
@@ -814,6 +815,22 @@ When the user is done with a statistics object they should call \texttt{PWR_Stat
 %=============================================================================%
 %=============================================================================%
 %=============================================================================%
+\section{Agent Functions}\label{sec:AgentFunctions}
+%
+
+The agents functions provide an interface to attach function pointers to notification handling code for a given object. 
+This is useful for passing messages between different levels of the Power API interfaces.
+For example, a job level power/energy manager can attach to an object in the system which can then recieve notifications from other layers of the Power API interfaces. 
+In this example a job manager can receive notifications from a resource manager that indicate changing power caps for a given job. 
+From the job manager's perspective, it can use notifications to request changes in power cap from the resource manager using the same notification interface. 
+
+Agent functions must register to a specific Power API object, and must include a function pointer to code meant to handle incoming notifications.
+Notifications include a versioning number in the \texttt{PWR_Note} type that can help the notification handler code to interpret the notification details included in the \texttt{PWR_Note} struct. 
+%
+
+
+
+
 %=============================================================================%
 %=============================================================================%
 %=============================================================================%
