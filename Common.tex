@@ -160,7 +160,7 @@ This design choice was made in order to keep usage of the Power API as simple as
 \begin{prototype}{ObjGetChildren}
 	\longdescription{The \texttt{PWR_ObjGetChildren} function returns the child or children of the specified object.  The caller is expected to check the return code of \texttt{PWR_ObjGetChildren} to determine if the object has children or not.  If the specified object has one or more children, indicated by a return code of \texttt{PWR_RET_SUCCESS}, a new group (\texttt{PWR_Grp}) is returned that contains the object's children.  The user is responsible for destroying this group when it is no longer needed (see \texttt{PWR_GrpDestroy} on page \pageref{func:GrpDestroy}).  If the specified object has no children, indicated by a return code of \texttt{PWR_RET_WARN_NO_CHILDREN}, no group is returned and the input (\texttt{PWR_Grp}) is not modified.}
 	\returntype{int}
-	\parameter{PWR_Obj objec}	{\pInput}	{The object that the user wishes to determine the children of.}
+	\parameter{PWR_Obj object}	{\pInput}	{The object that the user wishes to determine the children of.}
 	\parameter{PWR_Grp* group}	{\pOutput}	{On input, this should be set to point to an uninitialized \texttt{PWR_Grp} (i.e., the caller should not call \texttt{PWR_GrpCreate} ahead of time).  If \texttt{PWR_RET_SUCCESS} is returned, *group will be set to a newly created group containing the \texttt{object}'s children.  If \texttt{PWR_RET_WARN_NO_CHILDREN} is returned, the input \texttt{PWR_Grp} is not modified.}
 	\returnval{PWR_RET_SUCCESS}          		{Upon SUCCESS, group is set to a newly created group containing the child or children of specified object.}
 	\returnval{PWR_RET_WARN_NO_CHILDREN} 		{Call succeeded but specified object does not have any children. The input \texttt{PWR_Grp} is not modified.}
@@ -579,7 +579,7 @@ this section describes the metadata functions in more detail.
 \begin{prototype}{ObjAttrGetMeta}
 	\longdescription{The \texttt{PWR_ObjAttrGetMeta} function returns the requested metadata item for the specified object or object and attribute name pair.  The caller must allocate enough storage to hold the returned metadata value and pass a pointer to the storage in the \texttt{value} argument.  The required size can be determined by consulting the type column of Table~\ref{table:MasterMetadataTable}.  In the case of string metadata items (i.e., type \texttt{char *}), the required string length can be determined by getting the appropriate length metadata item, which is the original metadata name with the \texttt{_LEN} suffix added.  For example, the required string length for the \texttt{PWR_MD_VENDOR_INFO} string can be determined by retrieving the \texttt{PWR_MD_VENDOR_INFO_LEN} metadata item.}
 	\parameter{PWR_Obj obj}		{\pInput}{The target object.}
-	\parameter{iPWR_AttrName attr}	{\pInput}{The target attribute. See the \texttt{PWR_AttrName} type definition in Section \ref{type:AttrName} for the list of possible attributes. If object-only metadata is being requested, this argument should be set to \texttt{PWR_ATTR_NOT_SPECIFIED}.}
+	\parameter{PWR_AttrName attr}	{\pInput}{The target attribute. See the \texttt{PWR_AttrName} type definition in Section \ref{type:AttrName} for the list of possible attributes. If object-only metadata is being requested, this argument should be set to \texttt{PWR_ATTR_NOT_SPECIFIED}.}
 	\parameter{PWR_MetaName meta}	{\pInput}{The target metadata item to get. See the \texttt{PWR_MetaName} type definition in Section \ref{type:MetaName} for the list of possible metadata items, with detailed descriptions provided in Table~\ref{table:MasterMetadataTable}.}
 	\parameter{void* value}		{\pOutput}{Pointer to the caller allocated storage to hold the value of the requested metadata item. See Table~\ref{table:MasterMetadataTable} for type information.}
 	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
@@ -595,7 +595,7 @@ this section describes the metadata functions in more detail.
 	\longdescription{The \texttt{PWR_ObjAttrSetMeta} function sets the specified metadata item for the target object or object and attribute name pair.  The caller must pass a pointer to the new value for the specified metadata item in the \texttt{value} argument.  The required type for the value can be determined by consulting the type column of Table~\ref{table:MasterMetadataTable}.  In the case of string metadata items (i.e., type \texttt{char *}), the maximum string length can be determined by getting the appropriate length metadata item, which is the original metadata name with the \texttt{_LEN} suffix added.  For example, the maximum string length for the \texttt{PWR_MD_VENDOR_INFO} string can be determined by retrieving the \texttt{PWR_MD_VENDOR_INFO_LEN} metadata item.}
 	\returntype{int}
 	\parameter{PWR_Obj obj}		{\pInput}{The target object.}
-	\parameter{PWR_AttrName attr}	{\pInput}{The target attribute. See the \texttt{PWR_AttrName} type definition in Section \ref{type:AttrName} for the list of possible attributes. If object-only metadatais being set, this argument should be set to \texttt{PWR_ATTR_NOT_SPECIFIED}.}
+	\parameter{PWR_AttrName attr}	{\pInput}{The target attribute. See the \texttt{PWR_AttrName} type definition in Section \ref{type:AttrName} for the list of possible attributes. If object-only metadata is being set, this argument should be set to \texttt{PWR_ATTR_NOT_SPECIFIED}.}
 	\parameter{PWR_MetaName meta}	{\pInput}{The target metadata item to set. See the \texttt{PWR_MetaName} type definition in Section \ref{type:MetaName} for the list of possible metadata items, with detailed descriptions provided in Table~\ref{table:MasterMetadataTable}.}
 	\parameter{const void* value}	{\pInput}{Pointer to the new value for the metadata item. See Table~\ref{table:MasterMetadataTable} for type information.}
 	\returnval{PWR_RET_NO_ATTRIB} 	{The attribute specified is not implemented.}
@@ -655,7 +655,7 @@ Once \texttt{PWR_StatStop} has been called the stop time if fixed for that stati
 Essentially, the implementation at this time has everything it needs to calculate the return value or values for \texttt{PWR_StatGetValue} or \texttt{PWR_StatGetValues}.
 The user is responsible for checking the start and stop times returned along with the statistics value. 
 The start and stop times may be different for two reasons.
-In the normal case, the implementation is required to return start and stop times that accurately represent when the actual data was sampled that was used in calculting the statistics value.
+In the normal case, the implementation is required to return start and stop times that accurately represent when the actual data was sampled that was used in calculating the statistics value.
 As such, the returned values could differ from the times set by the real-time statistics functions.
 In the abnormal case, the start time, and possibly the stop time, could differ more significantly from the times \texttt{PWR_StatStart} and \texttt{PWR_StatStop} were called or the stop time determined by calling either of the \texttt{PWR_StatGetValue} or \texttt{PWR_StatGetValues} functions before \texttt{PWR_StatStop} has been called. 
 If this occurs, due to a resource exhaustion issue for example, the implementation is required to either return a failure or return a statistics value and the accurate time values representing the statistics value returned along with a warning indicating that the time window has been truncated. 
@@ -671,7 +671,7 @@ When the user is done with a statistics object they should call \texttt{PWR_Stat
 	\longdescription{The \texttt{PWR_ObjGetStat} function is used to retrieve a historic statistic using an object, attribute, statistic tuple.  Note that the \texttt{PWR_ObjGetStat} call operates on single objects only, not groups of objects.  The \texttt{PWR_ObjGetStat} is a standalone call is used for historic data collection only.  To retrieve a statistic from a group of objects, the \texttt{PWR_GrpGetStats} call on page \pageref{func:GrpGetStats} should be used.}
 	\parameter{PWR_Obj object}		{\pInput}{The object to collect the statistic for (part of the object, attribute statistic triple}
 	\parameter{PWR_AttrName name}		{\pInput}{The attribute to act on, see the \texttt{PWR_AttrName} type definition in section \ref{type:AttrName}.}
-	\parameter{PWR_AttrStat statistic}	{\pInput}{ified attribute, see \texttt{PWR_AttrStat} type definition in section \ref{sec:StatisticTypeDefinitions}.}
+	\parameter{PWR_AttrStat statistic}	{\pInput}{The desired statistic for the specified attribute, see \texttt{PWR_AttrStat} type definition in section \ref{sec:StatisticTypeDefinitions}.}
 	\parameter{PWR_TimePeriod* statTime}	{\pInputOutput}{Time structure that initially must contain the times (start, stop and instant if appropriate) requested by the user (Input) and the times, possibly      different, representing the period of the statistic data returned (Output), see page \pageref{type:TimePeriod}.}
 	\parameter{double* value}		{\pOutput}{pointer to space (double) to store the statistic}
 	\returnval{PWR_RET_SUCCESS} {Upon SUCCESS.}
@@ -778,7 +778,7 @@ When the user is done with a statistics object they should call \texttt{PWR_Stat
 	\parameter{PWR_AttrStat reduceOp}	{\pInput}{The reduction operation to perform.}
 	\parameter{int* index}			{\pOutput}{The index of the object in the statObj's associated object group that provided the reduction result. This value is only set for reduction operations where it makes sense, such as PWR_ATTR_STAT_MIN and PWR_ATTR_STAT_MAX.}
 	\parameter{double* result}		{\pOutput}{The result of the reduction operation, which is always a single double value.}
-	\parameter{PWR_Time* instant}		{\pOutput}{For statistics where a point in time that the value occured is valid (e.g. max and min), this is the timestamp when that value was observed.}
+	\parameter{PWR_Time* instant}		{\pOutput}{For statistics where a point in time that the value occurred is valid (e.g. max and min), this is the timestamp when that value was observed.}
 	\returnval{PWR_RET_SUCCESS} 	{Upon SUCCESS.}
 	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
 	\returnval{PWR_RET_WARN_TRUNC} 	{When the time window has been truncated by the implementation.}
