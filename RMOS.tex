@@ -56,3 +56,16 @@ The attribute functions in conjunction with the following attributes (Table \ref
 %==============================================================================%
 
 \subsection{Interface Specific Functions}\label{sec:RMOSFunctions}
+
+%=============================================================================%
+%int    PWR_ObjGetName( PWR_Obj object, char* dest, size_t len );
+\begin{prototype}{NotifyToNode}
+	\longdescription{The \texttt{PWR_NotifyToNode} function provides data in a notification object to the OS/node level from the system (resource manager/scheduler) level. This function is useful for reporting non-standard operating conditions directly to the node, bypassing intermediate layers For example, in the case where a job is being managed by an intelligent job manager, this function can notify the node that something has gone wrong with the job in the event that the job manager is incapable of providing this information. This is important as the operating conditions that were provided at a job-level may be violated if an error occurs. Therefore this solution allows the system to notify nodes of what to do. This is useufl if there are node level power/energy optimization runtimes in operation.}
+	\returntype{int}
+	\parameter{PWR_Note note}	{\pInput}	{The notification that the system wishes to transmit to the OS/node layer.}
+	\parameter{int agentid}    	{\pInput}	{The system agent target for the notification.}
+	\parameter{size_t len}    	{\pInput}	{The length of the user provided notification.}
+	\returnval{PWR_RET_FAILURE} 	{Upon FAILURE.}
+\end{prototype}
+
+
